@@ -52,3 +52,14 @@ pip install -e .
 ```bash
 python -m network_monitor
 ```
+
+## Roadmap
+- [ ] Configurable endpoint (server, port) and interval
+- [ ] Disconnect debounce (reduce false disconnects)
+- [ ] Start / Stop monitoring controls
+- [ ] Latency statistics (minimum/average/maximum over last N checks)
+- [ ] History Viewing (recent checks table)
+- [ ] UI Polish (improved layout and clear visual indicators)
+
+## Changes
+- 0.1.0 - Initial working GUI with TCP connectivity checks (`1.1.1.1:443`) and basic network statistics.
