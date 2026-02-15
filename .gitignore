@@ -1,0 +1,12 @@
+# Python-generated
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Virtual environments
+.venv/
+
+# Packaging and builds
+build/
+dist/
+*.spec
