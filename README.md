@@ -21,7 +21,14 @@ Desktop Python application (PySide6) that monitors basic internet connectivity b
     └── network_monitor
         ├── app.py
         ├── __init__.py
-        └── __main__.py
+        ├── __main__.py
+        ├── monitor
+        │   ├── __init.py
+        │   └── thread.py
+        ├── state.py
+        └── ui
+            ├── __init__.py
+            └── main_window.py
 ```
 
 ## Setup

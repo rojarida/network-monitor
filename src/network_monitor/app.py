@@ -1,11 +1,11 @@
 import sys
 from PySide6.QtWidgets import QApplication, QLabel
+from network_monitor.ui.main_window import MainWindow
+
 
 def main() -> int:
     app = QApplication(sys.argv)
-    window = QLabel("Network Monitor")
-    window.setWindowTitle("Network Monitor")
-    window.resize(320, 120)
+    window = MainWindow()
     window.show()
 
     return app.exec()
