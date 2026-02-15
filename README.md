@@ -15,6 +15,7 @@ Desktop Python application (PySide6) that monitors basic internet connectivity b
 ## Project Structure
 ```text
 .
+├── .gitignore
 ├── pyproject.toml
 ├── README.md
 └── src
@@ -23,12 +24,14 @@ Desktop Python application (PySide6) that monitors basic internet connectivity b
         ├── __init__.py
         ├── __main__.py
         ├── monitor
-        │   ├── __init.py
+        │   ├── __init__.py
         │   └── thread.py
         ├── state.py
         └── ui
             ├── __init__.py
-            └── main_window.py
+            ├── main_window.py
+            ├── monitor_view.py
+            └── settings_dialog.py
 ```
 
 ## Setup
