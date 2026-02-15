@@ -62,6 +62,7 @@ class MainWindow(QWidget):
         self.ui_refresh_timer.timeout.connect(self.refresh_labels)
         self.ui_refresh_timer.start()
 
+
     def on_check_result(self, result_object: object) -> None:
         check_result = result_object
         assert isinstance(check_result, CheckResult)
@@ -79,9 +80,9 @@ class MainWindow(QWidget):
             self.status_label.setText(f"Status: {'UP' if last_status else 'DOWN'}")
 
         if self.monitor_state.last_latency_ms is None:
-            self.latency_label.setText("Latency (ms): -")
+            self.latency_label.setText("Latency: - ms")
         else:
-            self.latency_label.setText(f"Latency (ms): {self.monitor_state.last_latency_ms:.1f}")
+            self.latency_label.setText(f"Latency: {round(self.monitor_state.last_latency_ms)} ms")
 
         self.disconnects_label.setText(f"Disconnects: {self.monitor_state.disconnects}")
 
@@ -100,32 +101,8 @@ class MainWindow(QWidget):
             f"Current phase: {format_seconds_as_hhmmss(current_phase_seconds)}"
         )
 
+
     def closeEvent(self, event) -> None:
         self.monitor_thread.stop()
         self.monitor_thread.wait(1500)
         super().closeEvent(event)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

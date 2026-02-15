@@ -72,15 +72,3 @@ class MonitorState:
             total_downtime += current_phase
 
         return (total_uptime, total_downtime)
-
-
-
-
-
-
-
-
-
-
-
-
