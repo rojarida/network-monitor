@@ -54,12 +54,24 @@ python -m network_monitor
 ```
 
 ## Roadmap
-- [ ] Configurable endpoint (server, port) and interval
+- [x] Configurable endpoint (server, port) and interval/timeout
 - [ ] Disconnect debounce (reduce false disconnects)
 - [ ] Start / Stop monitoring controls
 - [ ] Latency statistics (minimum/average/maximum over last N checks)
 - [ ] History Viewing (recent checks table)
 - [ ] UI Polish (improved layout and clear visual indicators)
 
-## Changes
-- 0.1.0 - Initial working GUI with TCP connectivity checks (`1.1.1.1:443`) and basic network statistics.
+## Changelog
+### 0.1.0
+Initial working GUI with TCP connectivity checks (`1.1.1.1:443`) and basic network statistics.
+
+### 0.2.0
+Added a settings dialog to configure the monitoring endpoint:
+- Server IP
+- Port
+
+Added selectable monitoring parameters:
+- Check interval (preset radio buttons with optional custom step)
+- Timeout (preset radio buttons with optional custom step)
+
+Settings persist between launches (saved locally)
