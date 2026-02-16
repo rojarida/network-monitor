@@ -225,14 +225,11 @@ class SettingsDialog(QDialog):
             save_button.setEnabled(False)
             return
 
-        if is_valid_ip_address(server_text):
-            self.validation_label.setText("")
-            self.server_line_edit.setStyleSheet("")
-            save_button.setEnabled(True)
-        else:
-            self.validation_label.setText("Please enter a valid IPv4 or IPv6 address.")
-            self.server_line_edit.setStyleSheet("border: 1px solid #CC3333")
-            save_button.setEnabled(False)
+        is_valid = is_valid_ip_address(server_text)
+
+        self.validation_label.setText("" if is_valid else "Please enter a valid IPv4 or IPv6 address.")
+        self.server_line_edit.setStyleSheet("" if is_valid else "border: 1px solid #CC3333")
+        save_button.setEnabled(is_valid)
 
 
     def current_config(self) -> MonitorConfig:

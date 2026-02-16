@@ -1,7 +1,17 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QWidget, QLabel, QGridLayout
+from PySide6.QtCore import QTimer, Signal
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QWidget, 
+    QLabel, 
+    QGridLayout,
+    QVBoxLayout,
+    QFrame,
+    QHBoxLayout,
+    QPushButton,
+    QSizePolicy,
+)
 
 from network_monitor.monitor.thread import MonitorThread
 from network_monitor.state import MonitorState, CheckResult
@@ -18,21 +28,44 @@ def format_seconds_as_hhmmss(seconds: float) -> str:
 
 
 class MonitorView(QWidget):
+    settings_requested = Signal()
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        
+
+        self.setObjectName("monitor_view")
+
         self.monitor_state = MonitorState(server="1.1.1.1", port=443)
         self.monitor_state.start()
 
-        layout = QGridLayout(self)
+        root_layout = QVBoxLayout(self)
+        root_layout.setObjectName("root_layout")
+
+        grid_layout = QGridLayout()
+        grid_layout.setObjectName("stats_grid")
+        root_layout.addLayout(grid_layout)
 
         self.status_label = QLabel("Status: ...")
+        self.status_label.setObjectName("status_label")
+        self.status_label.setProperty("status", "unknown")
+
         self.server_label = QLabel(f"Server: {self.monitor_state.server}:{self.monitor_state.port}")
+        self.server_label.setObjectName("server_label")
+
         self.latency_label = QLabel("Latency (ms): -")
+        self.latency_label.setObjectName("latency_label")
+
         self.disconnects_label = QLabel("Disconnects: 0")
+        self.disconnects_label.setObjectName("disconnects_label")
+
         self.total_uptime_label = QLabel("Total uptime: 00:00:00")
+        self.total_uptime_label.setObjectName("total_uptime_label")
+
         self.total_downtime_label = QLabel("Total downtime: 00:00:00")
+        self.total_downtime_label.setObjectName("total_downtime_label")
+
         self.current_phase_label = QLabel("Current phase: ...")
+        self.current_phase_label.setObjectName("current_phase_label")
 
         labels_in_order = [
             self.status_label,
@@ -45,7 +78,38 @@ class MonitorView(QWidget):
         ]
 
         for row, label in enumerate(labels_in_order):
-            layout.addWidget(label, row, 0)
+            grid_layout.addWidget(label, row, 0)
+
+        root_layout.addStretch(1)
+
+        # Separator between Current Phase and Settings button
+        separator_line = QFrame()
+        separator_line.setObjectName("separator_line")
+        separator_line.setFrameShape(QFrame.Shape.HLine)
+        separator_line.setFrameShadow(QFrame.Shadow.Sunken)
+        root_layout.addWidget(separator_line)
+
+        bottom_bar = QFrame()
+        bottom_bar.setObjectName("bottom_bar")
+        bottom_bar_layout = QHBoxLayout(bottom_bar)
+        bottom_bar_layout.setContentsMargins(8, 8, 8, 8)
+
+        self.settings_button = QPushButton("Settings")
+        self.settings_button.setObjectName("settings_button")
+        self.settings_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.settings_button.clicked.connect(self.settings_requested.emit)
+
+        settings_icon = QIcon.fromTheme("preferences-system-symbolic")
+        if settings_icon.isNull():
+            settings_icon = QIcon.fromTheme("preferences-system")
+        if not settings_icon.isNull():
+            self.settings_button.setIcon(settings_icon)
+
+        bottom_bar_layout.addStretch(1)
+        bottom_bar_layout.addWidget(self.settings_button)
+        bottom_bar_layout.addStretch(1)
+
+        root_layout.addWidget(bottom_bar)
 
         self.monitor_thread = MonitorThread(
             server=self.monitor_state.server,
@@ -63,6 +127,12 @@ class MonitorView(QWidget):
         self.ui_refresh_timer.start()
 
 
+    def _repolish(self, widget: QWidget) -> None:
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
+        widget.update()
+
+
     def on_check_result(self, result_object: object) -> None:
         check_result = result_object
         assert isinstance(check_result, CheckResult)
@@ -76,8 +146,14 @@ class MonitorView(QWidget):
 
         if last_status is None:
             self.status_label.setText("Status: ...")
+            new_status = "unknown"
         else:
             self.status_label.setText(f"Status: {'UP' if last_status else 'DOWN'}")
+            new_status = "up" if last_status else "down"
+
+        if self.status_label.property("status") != new_status:
+            self.status_label.setProperty("status", new_status)
+            self._repolish(self.status_label)
 
         if self.monitor_state.last_latency_ms is None:
             self.latency_label.setText("Latency: - ms")

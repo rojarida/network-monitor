@@ -1,5 +1,4 @@
 # Network Monitor
-
 Desktop Python application (PySide6) that monitors basic internet connectivity by periodically checking a known endpoint and tracking uptime/downtime statistics.
 
 ## Features

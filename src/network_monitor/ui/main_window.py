@@ -1,14 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (
-        QMainWindow, 
-        QMessageBox, 
-        QStyle, 
-        QToolBar, 
-        QWidget, 
-        QSizePolicy,
-)
+from PySide6.QtWidgets import QMainWindow
 
 from network_monitor.ui.monitor_view import MonitorView
 from network_monitor.ui.settings_dialog import SettingsDialog
@@ -22,27 +14,7 @@ class MainWindow(QMainWindow):
         self.monitor_view = MonitorView(self)
         self.setCentralWidget(self.monitor_view)
 
-        self._add_toolbar()
-
-
-    def _add_toolbar(self) -> None:
-        main_tool_bar = QToolBar("Main Toolbar", self)
-        main_tool_bar.setMovable(False)
-        self.addToolBar(main_tool_bar)
-
-        settings_icon = QIcon.fromTheme("preferences-system")
-        if settings_icon.isNull():
-            settings_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView)
-
-        settings_action = QAction(settings_icon, "Settings", self)
-        settings_action.setToolTip("Settings")
-        settings_action.triggered.connect(self.open_settings)
-
-        right_spacer = QWidget()
-        right_spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-
-        main_tool_bar.addWidget(right_spacer)
-        main_tool_bar.addAction(settings_action)
+        self.monitor_view.settings_requested.connect(self.open_settings)
 
 
     def open_settings(self) -> None:

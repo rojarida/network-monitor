@@ -1,0 +1,45 @@
+QPushButton {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid palette(mid);
+  background: palette(button);
+}
+
+QPushButton:hover {
+  background: palette(light);
+}
+
+QPushButton:pressed {
+  background: palette(midlight);
+}
+
+QPushButton:disabled {
+  border-color: palette(dark);
+  color: palette(mid);
+}
+
+QWidget#monitor_view {
+  background: palette(window);
+}
+
+QFrame#separator_line {
+  max-height: 1px;
+  background: palette(mid);
+}
+
+QFrame#bottom_bar {
+  border-top: 1px solid palette(mid);
+  background: palette(base);
+}
+
+QLabel {
+  padding: 2px 0px;
+}
+
+QLabel#status_label {
+  font-weight: 700;
+}
+
+QLabel#status_label[status="up"] { color: #2ECC71; }
+QLabel#status_label[status="down"] { color: #E74C3C; }
+QLabel#status_label[status="unknown"] { color: pallete(mid); }
