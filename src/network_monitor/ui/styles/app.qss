@@ -1,8 +1,63 @@
+/* ----- MONITORVIEW -------- */
+
+QWidget#monitor_view {
+  background: palette(window);
+}
+
+QLabel {
+  padding: 2px 0px;
+  color: palette(text);
+}
+
+/* ------ STATUS ------ */
+
+QLabel#status_label {
+  min-height: 32px;
+  max-height: 32px;
+  min-width: 50px;
+  padding: 0px 18px;
+  border-radius: 16px;
+  font-weight: 800;
+}
+
+QLabel#status_label[status="up"] {
+  background-color: #2ECC71;
+  color: white;
+}
+
+QLabel#status_label[status="down"] {
+  background-color: #E74C3C;
+  color: white;
+}
+
+QLabel#status_label[status="unknown"] {
+  background-color: palette(mid);
+  color: palette(button-text);
+}
+
+/* ------SEPARATOR & BOTTOM BAR ------- */
+
+QFrame#separator_line {
+  border: none;
+  min-height: 2px;
+  max-height: 2px;
+  background: palette(mid);
+}
+
+QFrame#bottom_bar {
+  background: palette(base);
+  border: none;
+}
+
+/* ---------- BUTTONS ---------- */
+
 QPushButton {
-  padding: 6px 12px;
-  border-radius: 8px;
+  min-height: 32px;
+  padding: 0px 18px;
+  border-radius: 16px;
   border: 1px solid palette(mid);
   background: palette(button);
+  color: palette(button-text);
 }
 
 QPushButton:hover {
@@ -18,28 +73,6 @@ QPushButton:disabled {
   color: palette(mid);
 }
 
-QWidget#monitor_view {
-  background: palette(window);
+QPushButton#settings_button {
+  min-width: 100px;
 }
-
-QFrame#separator_line {
-  max-height: 1px;
-  background: palette(mid);
-}
-
-QFrame#bottom_bar {
-  border-top: 1px solid palette(mid);
-  background: palette(base);
-}
-
-QLabel {
-  padding: 2px 0px;
-}
-
-QLabel#status_label {
-  font-weight: 700;
-}
-
-QLabel#status_label[status="up"] { color: #2ECC71; }
-QLabel#status_label[status="down"] { color: #E74C3C; }
-QLabel#status_label[status="unknown"] { color: pallete(mid); }

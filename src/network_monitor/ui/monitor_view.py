@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QTimer, Signal
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtWidgets import (
     QWidget, 
     QLabel, 
@@ -43,11 +42,22 @@ class MonitorView(QWidget):
 
         grid_layout = QGridLayout()
         grid_layout.setObjectName("stats_grid")
+        grid_layout.setColumnStretch(0, 1)
+        grid_layout.setContentsMargins(8, 8, 8, 8)
+        grid_layout.setVerticalSpacing(8)
         root_layout.addLayout(grid_layout)
 
-        self.status_label = QLabel("Status: ...")
+        self.status_label = QLabel("...")
         self.status_label.setObjectName("status_label")
         self.status_label.setProperty("status", "unknown")
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.status_label.setMinimumHeight(28)
+        self.status_label.setMinimumWidth(110)
+        self.status_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+
+        status_separator = QFrame()
+        status_separator.setObjectName("separator_line")
+        status_separator.setFrameShape(QFrame.Shape.NoFrame)
 
         self.server_label = QLabel(f"Server: {self.monitor_state.server}:{self.monitor_state.port}")
         self.server_label.setObjectName("server_label")
@@ -67,8 +77,7 @@ class MonitorView(QWidget):
         self.current_phase_label = QLabel("Current phase: ...")
         self.current_phase_label.setObjectName("current_phase_label")
 
-        labels_in_order = [
-            self.status_label,
+        other_labels = [
             self.server_label,
             self.latency_label,
             self.disconnects_label,
@@ -77,16 +86,20 @@ class MonitorView(QWidget):
             self.current_phase_label,
         ]
 
-        for row, label in enumerate(labels_in_order):
+        grid_layout.addWidget(self.status_label, 0, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
+        grid_layout.setRowMinimumHeight(1, 6)
+        grid_layout.addWidget(status_separator, 2, 0)
+
+        for row, label in enumerate(other_labels, start=3):
             grid_layout.addWidget(label, row, 0)
+
 
         root_layout.addStretch(1)
 
         # Separator between Current Phase and Settings button
         separator_line = QFrame()
         separator_line.setObjectName("separator_line")
-        separator_line.setFrameShape(QFrame.Shape.HLine)
-        separator_line.setFrameShadow(QFrame.Shadow.Sunken)
+        separator_line.setFrameShape(QFrame.Shape.NoFrame)
         root_layout.addWidget(separator_line)
 
         bottom_bar = QFrame()
@@ -98,12 +111,6 @@ class MonitorView(QWidget):
         self.settings_button.setObjectName("settings_button")
         self.settings_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.settings_button.clicked.connect(self.settings_requested.emit)
-
-        settings_icon = QIcon.fromTheme("preferences-system-symbolic")
-        if settings_icon.isNull():
-            settings_icon = QIcon.fromTheme("preferences-system")
-        if not settings_icon.isNull():
-            self.settings_button.setIcon(settings_icon)
 
         bottom_bar_layout.addStretch(1)
         bottom_bar_layout.addWidget(self.settings_button)
@@ -138,17 +145,16 @@ class MonitorView(QWidget):
         assert isinstance(check_result, CheckResult)
 
         self.monitor_state.apply(check_result)
-        self.refresh_labels()
 
 
     def refresh_labels(self) -> None:
         last_status = self.monitor_state.last_status_ok
 
         if last_status is None:
-            self.status_label.setText("Status: ...")
+            self.status_label.setText("...")
             new_status = "unknown"
         else:
-            self.status_label.setText(f"Status: {'UP' if last_status else 'DOWN'}")
+            self.status_label.setText('UP' if last_status else 'DOWN')
             new_status = "up" if last_status else "down"
 
         if self.status_label.property("status") != new_status:
@@ -200,6 +206,10 @@ class MonitorView(QWidget):
 
         # Update label
         self.server_label.setText(f"Server: {config.server}:{config.port}")
+        self.status_label.setText("...")
+        self.status_label.setProperty("status", "unknown")
+        self._repolish(self.status_label)
+        self.refresh_labels()
 
 
     def shutdown(self) -> None:
