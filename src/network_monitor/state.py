@@ -54,6 +54,24 @@ class MonitorState:
         self.last_state_change_time = check_result.timestamp
 
 
+    def endpoint_changed(self) -> None:
+        # Keep totals, but close out current phase and restart tracking
+        now = time.monotonic()
+
+        # If in a known state, finalize the current phase into totals
+        if self.last_status_ok is not None:
+            elapsed = max(0.0, now - self.last_state_change_time)
+            if self.last_status_ok:
+                self.total_uptime_seconds += elapsed
+            else:
+                self.total_downtime_seconds += elapsed
+
+        # Restart phase
+        self.last_status_ok = None
+        self.last_state_change_time = now
+        self.last_latency_ms = None
+
+
     def current_phase_seconds(self) -> float:
         return max(0.0, time.monotonic() - self.last_state_change_time)
 
