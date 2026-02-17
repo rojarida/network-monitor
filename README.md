@@ -103,3 +103,9 @@ Fixed issue where disconnects wasn't functioning properly
 - Status changes don't immediately result in a disconnect
 - Starting from a DOWN status doesn't count as a disconnect
 - Going from an UP status into an IP address that is DOWN results in a disconnect
+
+### 0.3.3
+Improved UX by changing pills dynamically depending on status
+- If disconnects is 0, color is green
+- If disconnects is 1 - 9, color is yellow
+- If disconnects is 10+, color is red
