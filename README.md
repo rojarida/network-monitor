@@ -70,7 +70,7 @@ python -m network_monitor
 
 ## Bugs
 - [x] Statistics keep resetting on status change (fixed in [0.3.1](#031))
-- [ ] Disconnects aren't being incremented/tracked
+- [x] Disconnects aren't being incremented/tracked (fixed in [0.3.2](#032))
 
 ## Changelog
 ### 0.1.0
@@ -97,3 +97,9 @@ Improved UI
 
 ### 0.3.1
 Fixed issue where the metrics were being reset to default when changing settings
+
+### 0.3.2
+Fixed issue where disconnects wasn't functioning properly
+- Status changes don't immediately result in a disconnect
+- Starting from a DOWN status doesn't count as a disconnect
+- Going from an UP status into an IP address that is DOWN results in a disconnect
