@@ -63,6 +63,10 @@ python -m network_monitor
 - [ ] History Viewing (recent checks table)
 - [ ] UI Polish (improved layout and clear visual indicators)
 
+## Bugs
+- Statistics keep resetting on status change
+- Disconnects aren't being incremented/tracked
+
 ## Changelog
 ### 0.1.0
 Initial working GUI with TCP connectivity checks (`1.1.1.1:443`) and basic network statistics.
@@ -77,3 +81,11 @@ Added selectable monitoring parameters:
 - Timeout (preset radio buttons with optional custom step)
 
 Settings persist between launches (saved locally)
+
+### 0.3.0
+Fixed an issue where configurations weren't persistent
+
+Improved UI
+- Metric rows
+- Statistics are now in green, pills
+- Tightened the spacing surrounding the settings button and status

@@ -7,7 +7,7 @@ packages = ["src/network-monitor"]
 
 [project]
 name = "network-monitor"
-version = "0.2.0"
+version = "0.3.0"
 description = "Desktop application to monitor network connectivity."
 readme = "README.md"
 requires-python = ">=3.11"
