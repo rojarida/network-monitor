@@ -1,4 +1,4 @@
-/* ----- MONITORVIEW -------- */
+/* ----- MONITOR VIEW -------- */
 
 QWidget#monitor_view {
   background: palette(window);
@@ -9,15 +9,20 @@ QLabel {
   color: palette(text);
 }
 
+QWidget#stats_container {
+  padding-top: 0px;
+  padding-bottom: 6px;
+}
+
 /* ------ STATUS ------ */
 
 QLabel#status_label {
   min-height: 32px;
   max-height: 32px;
-  min-width: 50px;
+  min-width: 20px;
   padding: 0px 18px;
   border-radius: 16px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 QLabel#status_label[status="up"] {
@@ -35,17 +40,46 @@ QLabel#status_label[status="unknown"] {
   color: palette(button-text);
 }
 
+/* --------- METRICS --------- */
+
+QLabel#metric_key {
+  color: palette(text);
+}
+
+QLabel#metric_value {
+  font-weight: 600;
+}
+
+/* Base pill styling */
+QLabel#metric_value[kind="pill"] {
+  qproperty-alignment: 'AlignVCenter | AlignRight';
+  max-height: 22px;
+  min-height: 22px;
+  padding: 0px 12px;
+  border-radius: 11px;
+  background: #2ECC71;
+  color: white;
+}
+
+QLabel#metric_value[kind="pill"][metric="server"] {
+  background: #00B3B3;
+}
+
 /* ------SEPARATOR & BOTTOM BAR ------- */
 
-QFrame#separator_line {
+QFrame#separator_top, 
+QFrame#separator_bottom {
   border: none;
   min-height: 2px;
   max-height: 2px;
   background: palette(mid);
+  margin: 10px 0px;
 }
 
 QFrame#bottom_bar {
   background: palette(base);
+  padding-top: 2px;
+  padding-bottom: 6px;
   border: none;
 }
 
@@ -55,7 +89,7 @@ QPushButton {
   min-height: 32px;
   padding: 0px 18px;
   border-radius: 16px;
-  border: 1px solid palette(mid);
+  border: 2px solid palette(mid);
   background: palette(button);
   color: palette(button-text);
 }

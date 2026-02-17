@@ -4,7 +4,6 @@ from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtWidgets import (
     QWidget, 
     QLabel, 
-    QGridLayout,
     QVBoxLayout,
     QFrame,
     QHBoxLayout,
@@ -39,73 +38,67 @@ class MonitorView(QWidget):
 
         root_layout = QVBoxLayout(self)
         root_layout.setObjectName("root_layout")
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
 
-        grid_layout = QGridLayout()
-        grid_layout.setObjectName("stats_grid")
-        grid_layout.setColumnStretch(0, 1)
-        grid_layout.setContentsMargins(8, 8, 8, 8)
-        grid_layout.setVerticalSpacing(8)
-        root_layout.addLayout(grid_layout)
+        # Statistic container
+        stats_container = QWidget()
+        stats_container.setObjectName("stats_container")
+        stats_layout = QVBoxLayout(stats_container)
+        stats_layout.setContentsMargins(8, 8, 8, 8)
 
+        # Status
         self.status_label = QLabel("...")
         self.status_label.setObjectName("status_label")
         self.status_label.setProperty("status", "unknown")
+        self.status_label.setProperty("kind", "pill")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.status_label.setMinimumHeight(28)
-        self.status_label.setMinimumWidth(110)
-        self.status_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
-        status_separator = QFrame()
-        status_separator.setObjectName("separator_line")
-        status_separator.setFrameShape(QFrame.Shape.NoFrame)
+        status_row = QHBoxLayout()
+        status_row.setContentsMargins(0, 0, 0, 0)
+        status_row.setSpacing(0)
+        status_row.addStretch(1)
+        status_row.addWidget(self.status_label)
+        status_row.addStretch(1)
+        stats_layout.addSpacing(8)
+        stats_layout.addLayout(status_row)
 
-        self.server_label = QLabel(f"Server: {self.monitor_state.server}:{self.monitor_state.port}")
-        self.server_label.setObjectName("server_label")
+        # Separator between status and stats
+        separator_top = QFrame()
+        separator_top.setObjectName("separator_top")
+        separator_top.setFrameShape(QFrame.Shape.NoFrame)
+        stats_layout.addWidget(separator_top)
 
-        self.latency_label = QLabel("Latency (ms): -")
-        self.latency_label.setObjectName("latency_label")
+        # Metric rows
+        server_row, self.server_value = self._make_metric_row("Server")
+        self.server_value.setProperty("metric", "server")
+        latency_row, self.latency_value = self._make_metric_row("Latency")
+        disconnects_row, self.disconnects_value = self._make_metric_row("Disconnects")
+        uptime_row, self.total_uptime_value = self._make_metric_row("Total uptime")
+        downtime_row, self.total_downtime_value = self._make_metric_row("Total downtime")
+        phase_row, self.current_phase_value = self._make_metric_row("Current phase")
 
-        self.disconnects_label = QLabel("Disconnects: 0")
-        self.disconnects_label.setObjectName("disconnects_label")
+        stats_layout.addWidget(server_row)
+        stats_layout.addWidget(latency_row)
+        stats_layout.addWidget(disconnects_row)
+        stats_layout.addWidget(uptime_row)
+        stats_layout.addWidget(downtime_row)
+        stats_layout.addWidget(phase_row)
 
-        self.total_uptime_label = QLabel("Total uptime: 00:00:00")
-        self.total_uptime_label.setObjectName("total_uptime_label")
-
-        self.total_downtime_label = QLabel("Total downtime: 00:00:00")
-        self.total_downtime_label.setObjectName("total_downtime_label")
-
-        self.current_phase_label = QLabel("Current phase: ...")
-        self.current_phase_label.setObjectName("current_phase_label")
-
-        other_labels = [
-            self.server_label,
-            self.latency_label,
-            self.disconnects_label,
-            self.total_uptime_label,
-            self.total_downtime_label,
-            self.current_phase_label,
-        ]
-
-        grid_layout.addWidget(self.status_label, 0, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
-        grid_layout.setRowMinimumHeight(1, 6)
-        grid_layout.addWidget(status_separator, 2, 0)
-
-        for row, label in enumerate(other_labels, start=3):
-            grid_layout.addWidget(label, row, 0)
-
-
+        root_layout.addWidget(stats_container)
         root_layout.addStretch(1)
 
         # Separator between Current Phase and Settings button
-        separator_line = QFrame()
-        separator_line.setObjectName("separator_line")
-        separator_line.setFrameShape(QFrame.Shape.NoFrame)
-        root_layout.addWidget(separator_line)
+        separator_bottom = QFrame()
+        separator_bottom.setObjectName("separator_bottom")
+        separator_bottom.setFrameShape(QFrame.Shape.NoFrame)
+        root_layout.addWidget(separator_bottom)
 
+        # Bottom bar
         bottom_bar = QFrame()
         bottom_bar.setObjectName("bottom_bar")
         bottom_bar_layout = QHBoxLayout(bottom_bar)
-        bottom_bar_layout.setContentsMargins(8, 8, 8, 8)
+        bottom_bar_layout.setContentsMargins(8, 4, 8, 10)
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.setObjectName("settings_button")
@@ -118,6 +111,7 @@ class MonitorView(QWidget):
 
         root_layout.addWidget(bottom_bar)
 
+        # Monitor thread and UI refresh
         self.monitor_thread = MonitorThread(
             server=self.monitor_state.server,
             port=self.monitor_state.port,
@@ -134,6 +128,28 @@ class MonitorView(QWidget):
         self.ui_refresh_timer.start()
 
 
+    def _make_metric_row(self, key_text: str) -> tuple[QWidget, QLabel]:
+        row = QWidget()
+        row.setObjectName("metric_row")
+
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+
+        key_label = QLabel(key_text)
+        key_label.setObjectName("metric_key")
+
+        value_label = QLabel("-")
+        value_label.setObjectName("metric_value")
+        value_label.setProperty("kind", "pill")
+
+        layout.addWidget(key_label)
+        layout.addStretch(1)
+        layout.addWidget(value_label)
+
+        return row, value_label
+
+
     def _repolish(self, widget: QWidget) -> None:
         widget.style().unpolish(widget)
         widget.style().polish(widget)
@@ -141,10 +157,9 @@ class MonitorView(QWidget):
 
 
     def on_check_result(self, result_object: object) -> None:
-        check_result = result_object
-        assert isinstance(check_result, CheckResult)
-
-        self.monitor_state.apply(check_result)
+        if not isinstance(result_object, CheckResult):
+            return
+        self.monitor_state.apply(result_object)
 
 
     def refresh_labels(self) -> None:
@@ -161,27 +176,26 @@ class MonitorView(QWidget):
             self.status_label.setProperty("status", new_status)
             self._repolish(self.status_label)
 
+        # Server
+        self.server_value.setText(f"{self.monitor_state.server}:{self.monitor_state.port}")
+
+        # Latency
         if self.monitor_state.last_latency_ms is None:
-            self.latency_label.setText("Latency: - ms")
+            self.latency_value.setText("-")
         else:
-            self.latency_label.setText(f"Latency: {round(self.monitor_state.last_latency_ms)} ms")
+            self.latency_value.setText(f"{round(self.monitor_state.last_latency_ms)} ms")
 
-        self.disconnects_label.setText(f"Disconnects: {self.monitor_state.disconnects}")
+        # Disconnects
+        self.disconnects_value.setText(str(self.monitor_state.disconnects))
 
+        # Total uptime/downtime
         total_uptime_seconds, total_downtime_seconds = self.monitor_state.totals_including_current_phase()
+        self.total_uptime_value.setText(format_seconds_as_hhmmss(total_uptime_seconds))
+        self.total_downtime_value.setText(format_seconds_as_hhmmss(total_downtime_seconds))
 
-        self.total_uptime_label.setText(
-            f"Total uptime: {format_seconds_as_hhmmss(total_uptime_seconds)}"
-        )
-
-        self.total_downtime_label.setText(
-            f"Total downtime: {format_seconds_as_hhmmss(total_downtime_seconds)}"
-        )
-
+        # Phase
         current_phase_seconds = self.monitor_state.current_phase_seconds()
-        self.current_phase_label.setText(
-            f"Current phase: {format_seconds_as_hhmmss(current_phase_seconds)}"
-        )
+        self.current_phase_value.setText(format_seconds_as_hhmmss(current_phase_seconds))
 
 
     def apply_config(self, config: MonitorConfig) -> None:
@@ -205,7 +219,7 @@ class MonitorView(QWidget):
         self.monitor_thread.start()
 
         # Update label
-        self.server_label.setText(f"Server: {config.server}:{config.port}")
+        self.server_value.setText(f"Server: {config.server}:{config.port}")
         self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
         self._repolish(self.status_label)
