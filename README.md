@@ -69,7 +69,7 @@ python -m network_monitor
 - [ ] UI Polish (improved layout and clear visual indicators)
 
 ## Bugs
-- [x] Statistics keep resetting on status change (fixed in [0.3.1](#0.3.1))
+- [x] Statistics keep resetting on status change (fixed in [0.3.1](#031))
 - [ ] Disconnects aren't being incremented/tracked
 
 ## Changelog
