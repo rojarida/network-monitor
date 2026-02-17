@@ -24,6 +24,8 @@ class MonitorState:
     last_state_change_time: float = 0.0
     last_latency_ms: float | None = None
 
+    pending_disconnect_if_first_result_down: bool = False
+
 
     def start(self) -> None:
         now = time.monotonic()
@@ -32,13 +34,20 @@ class MonitorState:
 
 
     def apply(self, check_result: CheckResult) -> None:
-        self.last_latency_ms = check_result.latency_ms
+        # Store latency on when UP
+        self.last_latency_ms = check_result.latency_ms if check_result.ok else None
 
+        # First check after startup or endpoint change
         if self.last_status_ok is None:
+            if self.pending_disconnect_if_first_result_down and (check_result.ok is False):
+                self.disconnects += 1
+
+            self.pending_disconnect_if_first_result_down = False
             self.last_status_ok = check_result.ok
             self.last_state_change_time = check_result.timestamp
             return
         
+        # No status change
         if check_result.ok == self.last_status_ok:
             return
 
@@ -46,6 +55,7 @@ class MonitorState:
 
         if self.last_status_ok:
             self.total_uptime_seconds += elapsed_in_previous_state
+            # last_status_ok is True and transition implies DOWN
             self.disconnects += 1
         else:
             self.total_downtime_seconds += elapsed_in_previous_state
@@ -58,6 +68,9 @@ class MonitorState:
         # Keep totals, but close out current phase and restart tracking
         now = time.monotonic()
 
+        # Check status before switching endpoints
+        was_up_before_change = (self.last_status_ok is True)
+
         # If in a known state, finalize the current phase into totals
         if self.last_status_ok is not None:
             elapsed = max(0.0, now - self.last_state_change_time)
@@ -66,10 +79,14 @@ class MonitorState:
             else:
                 self.total_downtime_seconds += elapsed
 
-        # Restart phase
+        # New endpoint starts "unknown"
         self.last_status_ok = None
         self.last_state_change_time = now
         self.last_latency_ms = None
+
+        # If status was previously UP, and the endpoint status is DOWN
+        # Consider it as a disconnect
+        self.pending_disconnect_if_first_result_down = was_up_before_change
 
 
     def current_phase_seconds(self) -> float:
