@@ -165,6 +165,7 @@ class MonitorView(QWidget):
         if not isinstance(result_object, CheckResult):
             return
         self.monitor_state.apply(result_object)
+        self.refresh_labels()
 
 
     def refresh_labels(self) -> None:
@@ -208,9 +209,9 @@ class MonitorView(QWidget):
         self.monitor_thread.stop()
         self.monitor_thread.wait(1500)
 
-        # Reset state
-        self.monitor_state = MonitorState(server=config.server, port=config.port)
-        self.monitor_state.start()
+        self.monitor_state.server = config.server
+        self.monitor_state.port = config.port
+        self.monitor_state.endpoint_changed()
 
         # Restart thread with new configuration
         self.monitor_thread = MonitorThread(
