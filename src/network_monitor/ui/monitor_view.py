@@ -77,11 +77,18 @@ class MonitorView(QWidget):
         # Metric rows
         server_row, self.server_value = self._make_metric_row("Server")
         self.server_value.setProperty("metric", "server")
+
         latency_row, self.latency_value = self._make_metric_row("Latency")
+
         disconnects_row, self.disconnects_value = self._make_metric_row("Disconnects")
+
         uptime_row, self.total_uptime_value = self._make_metric_row("Total uptime")
+
         downtime_row, self.total_downtime_value = self._make_metric_row("Total downtime")
+        self.total_downtime_value.setProperty("metric", "downtime")
+
         phase_row, self.current_phase_value = self._make_metric_row("Current phase")
+        self.current_phase_value.setProperty("metric", "phase")
 
         stats_layout.addWidget(server_row)
         stats_layout.addWidget(latency_row)
