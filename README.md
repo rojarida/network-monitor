@@ -109,3 +109,9 @@ Improved UX by changing pills dynamically depending on status
 - If disconnects is 0, color is green
 - If disconnects is 1 - 9, color is yellow
 - If disconnects is 10+, color is red
+
+### 0.3.4
+Similar to [0.3.3](#033), change pills dynamically for latency
+- If latency is less than 100, color is green
+- If latency is 100 - 199, color is yellow
+- If latency is 200+, color is red
