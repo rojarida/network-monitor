@@ -52,6 +52,11 @@ pip install -e .
 
 ## Run
 ```bash
+network_monitor
+```
+
+Alternatively, you can run it as a module:
+```bash
 python -m network_monitor
 ```
 
@@ -64,8 +69,8 @@ python -m network_monitor
 - [ ] UI Polish (improved layout and clear visual indicators)
 
 ## Bugs
-- Statistics keep resetting on status change
-- Disconnects aren't being incremented/tracked
+- [ ] Statistics keep resetting on status change
+- [ ] Disconnects aren't being incremented/tracked
 
 ## Changelog
 ### 0.1.0
