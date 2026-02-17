@@ -52,7 +52,7 @@ pip install -e .
 
 ## Run
 ```bash
-network_monitor
+network-monitor
 ```
 
 Alternatively, you can run it as a module:
