@@ -69,7 +69,7 @@ python -m network_monitor
 - [ ] UI Polish (improved layout and clear visual indicators)
 
 ## Bugs
-- [ ] Statistics keep resetting on status change
+- [x] Statistics keep resetting on status change (fixed in [0.3.1](#0.3.1))
 - [ ] Disconnects aren't being incremented/tracked
 
 ## Changelog
@@ -94,3 +94,6 @@ Improved UI
 - Metric rows
 - Statistics are now in green, pills
 - Tightened the spacing surrounding the settings button and status
+
+### 0.3.1
+Fixed issue where the metrics were being reset to default when changing settings
