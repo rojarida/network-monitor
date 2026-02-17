@@ -26,12 +26,12 @@ QLabel#status_label {
 }
 
 QLabel#status_label[status="up"] {
-  background-color: #2ECC71;
+  background-color: #50C878; /* Emerald Green */
   color: white;
 }
 
 QLabel#status_label[status="down"] {
-  background-color: #E74C3C;
+  background-color: #C41E3A; /* Cardinal Red */
   color: white;
 }
 
@@ -57,12 +57,12 @@ QLabel#metric_value[kind="pill"] {
   min-height: 22px;
   padding: 0px 12px;
   border-radius: 11px;
-  background: #2ECC71;
+  background: #50C878; /* Emerald Green */
   color: white;
 }
 
 QLabel#metric_value[kind="pill"][metric="server"] {
-  background: #00B3B3;
+  background: #87CEEB; /* Sky Blue */
 }
 
 /* ------SEPARATOR & BOTTOM BAR ------- */
