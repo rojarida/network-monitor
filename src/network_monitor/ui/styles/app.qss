@@ -72,13 +72,22 @@ QWidget#monitor_view[status="down"] QLabel#metric_value[kind="pill"][metric="pha
   background: #C41E3A; /* Cardinal Red */
 }
 
+/* Latency severity */
+QLabel#metric_value[kind="pill"][metric="latency"][level="warn"] {
+  background: #FFC000; /* Golden Yellow */
+}
+
+QLabel#metric_value[kind="pill"][metric="latency"][level="bad"] {
+  background: #C41E3A; /* Cardinal Red */
+}
+
 /* Disconnect severity */
 QLabel#metric_value[kind="pill"][metric="disconnects"][level="warn"] {
   background: #FFC000; /* Golden Yellow */
 }
 
 QLabel#metric_value[kind="pill"][metric="disconnects"][level="bad"] {
-  background: #C41E3A;
+  background: #C41E3A; /* Cardinal Red */
 }
 
 /* ------SEPARATOR & BOTTOM BAR ------- */

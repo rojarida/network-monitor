@@ -204,26 +204,40 @@ class MonitorView(QWidget):
         self.server_value.setText(f"{self.monitor_state.server}:{self.monitor_state.port}")
 
         # Latency
-        if self.monitor_state.last_latency_ms is None:
+        latency_ms = self.monitor_state.last_latency_ms
+
+        if latency_ms is None:
             self.latency_value.setText("-")
+            latency_level = "na"
         else:
-            self.latency_value.setText(f"{round(self.monitor_state.last_latency_ms)} ms")
+            rounded_latency_ms = round(latency_ms)
+            self.latency_value.setText(f"{rounded_latency_ms} ms")
+
+            if rounded_latency_ms < 100:
+                latency_level = "good"
+            elif rounded_latency_ms < 200:
+                latency_level = "warn"
+            else:
+                latency_level = "bad"
+
+        if self.latency_value.property("level") != latency_level:
+            self.latency_value.setProperty("level", latency_level)
+            self._repolish(self.latency_value)
 
         # Disconnects
         self.disconnects_value.setText(str(self.monitor_state.disconnects))
         disconnects = self.monitor_state.disconnects
-        self.disconnects_value.setText(str(disconnects))
 
         # Track disconnect count and create a property level
         if disconnects == 0:
-            level = "good"
+            disconnects_level = "good"
         elif disconnects < 10:
-            level = "warn"
+            disconnects_level = "warn"
         else:
-            level = "bad"
+            disconnects_level = "bad"
 
-        if self.disconnects_value.property("level") != level:
-            self.disconnects_value.setProperty("level", level)
+        if self.disconnects_value.property("level") != disconnects_level:
+            self.disconnects_value.setProperty("level", disconnects_level)
             self._repolish(self.disconnects_value)
 
         # Total uptime/downtime
