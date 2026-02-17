@@ -26,7 +26,7 @@ QLabel#status_label {
 }
 
 QLabel#status_label[status="up"] {
-  background-color: #50C878; /* Emerald Green */
+  background-color: #228B22; /* Forest Green */
   color: white;
 }
 
@@ -57,12 +57,28 @@ QLabel#metric_value[kind="pill"] {
   min-height: 22px;
   padding: 0px 12px;
   border-radius: 11px;
-  background: #50C878; /* Emerald Green */
+  background: #228B22; /* Forest Green */
   color: white;
 }
 
 QLabel#metric_value[kind="pill"][metric="server"] {
-  background: #87CEEB; /* Sky Blue */
+  background: #0F52BA; /* Sapphire Blue */
+}
+
+/* When status is DOWN, change pills to red */
+QWidget#monitor_view[status="down"] QLabel#metric_value[kind="pill"][metric="latency"],
+QWidget#monitor_view[status="down"] QLabel#metric_value[kind="pill"][metric="downtime"],
+QWidget#monitor_view[status="down"] QLabel#metric_value[kind="pill"][metric="phase"] {
+  background: #C41E3A; /* Cardinal Red */
+}
+
+/* Disconnect severity */
+QLabel#metric_value[kind="pill"][metric="disconnects"][level="warn"] {
+  background: #FFC000; /* Golden Yellow */
+}
+
+QLabel#metric_value[kind="pill"][metric="disconnects"][level="bad"] {
+  background: #C41E3A;
 }
 
 /* ------SEPARATOR & BOTTOM BAR ------- */
