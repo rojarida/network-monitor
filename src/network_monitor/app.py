@@ -13,7 +13,7 @@ def load_stylesheet() -> str:
     return stylesheet_path.read_text(encoding="utf-8")
 
 
-def main() -> None:
+def main() -> int:
     application = QApplication(sys.argv)
     QCoreApplication.setOrganizationName("RomanJay")
     QCoreApplication.setApplicationName("Network Monitor")
@@ -21,7 +21,7 @@ def main() -> None:
 
     window = MainWindow()
     window.show()
-    sys.exit(application.exec())
+    return application.exec()
 
 
 if __name__ == "__main__":
