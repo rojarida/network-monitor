@@ -79,10 +79,13 @@ class MonitorView(QWidget):
         self.server_value.setProperty("metric", "server")
 
         latency_row, self.latency_value = self._make_metric_row("Latency")
+        self.latency_value.setProperty("metric", "latency")
 
         disconnects_row, self.disconnects_value = self._make_metric_row("Disconnects")
+        self.disconnects_value.setProperty("metric", "disconnects")
 
         uptime_row, self.total_uptime_value = self._make_metric_row("Total uptime")
+        self.total_uptime_value.setProperty("metric", "uptime")
 
         downtime_row, self.total_downtime_value = self._make_metric_row("Total downtime")
         self.total_downtime_value.setProperty("metric", "downtime")
@@ -185,6 +188,14 @@ class MonitorView(QWidget):
             self.status_label.setText('UP' if last_status else 'DOWN')
             new_status = "up" if last_status else "down"
 
+        if self.property("status") != new_status:
+            self.setProperty("status", new_status)
+            self._repolish(self)
+            self._repolish(self.total_downtime_value)
+            self._repolish(self.current_phase_value)
+            self._repolish(self.latency_value)
+            self._repolish(self.disconnects_value)
+
         if self.status_label.property("status") != new_status:
             self.status_label.setProperty("status", new_status)
             self._repolish(self.status_label)
@@ -200,6 +211,20 @@ class MonitorView(QWidget):
 
         # Disconnects
         self.disconnects_value.setText(str(self.monitor_state.disconnects))
+        disconnects = self.monitor_state.disconnects
+        self.disconnects_value.setText(str(disconnects))
+
+        # Track disconnect count and create a property level
+        if disconnects == 0:
+            level = "good"
+        elif disconnects < 10:
+            level = "warn"
+        else:
+            level = "bad"
+
+        if self.disconnects_value.property("level") != level:
+            self.disconnects_value.setProperty("level", level)
+            self._repolish(self.disconnects_value)
 
         # Total uptime/downtime
         total_uptime_seconds, total_downtime_seconds = self.monitor_state.totals_including_current_phase()
