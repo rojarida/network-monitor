@@ -28,12 +28,17 @@ def format_seconds_as_hhmmss(seconds: float) -> str:
 class MonitorView(QWidget):
     settings_requested = Signal()
 
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self.setObjectName("monitor_view")
 
-        self.monitor_state = MonitorState(server="1.1.1.1", port=443)
+        startup_config = MonitorConfig.load()
+        self.monitor_state = MonitorState(
+            server=startup_config.server,
+            port=startup_config.port,
+        )
         self.monitor_state.start()
 
         root_layout = QVBoxLayout(self)
@@ -113,10 +118,10 @@ class MonitorView(QWidget):
 
         # Monitor thread and UI refresh
         self.monitor_thread = MonitorThread(
-            server=self.monitor_state.server,
-            port=self.monitor_state.port,
-            interval_s=1.0,
-            timeout_s=1.0,
+            server=startup_config.server,
+            port=startup_config.port,
+            interval_s=startup_config.interval_s,
+            timeout_s=startup_config.timeout_s,
         )
 
         self.monitor_thread.result.connect(self.on_check_result)

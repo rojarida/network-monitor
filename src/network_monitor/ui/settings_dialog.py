@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ipaddress
+from typing import Any, ClassVar
 from dataclasses import dataclass
 
 from PySide6.QtCore import QSettings
@@ -29,6 +30,33 @@ class MonitorConfig:
     timeout_s: float
 
 
+    def save(self) -> None:
+        settings = QSettings()
+        settings.setValue("endpoint/server", self.server)
+        settings.setValue("endpoint/port", self.port)
+        settings.setValue("monitor/interval_s", self.interval_s)
+        settings.setValue("monitor/timeout_s", self.timeout_s)
+        settings.sync()
+
+
+    @classmethod
+    def load(cls) -> "MonitorConfig":
+        settings = QSettings()
+
+        server_raw: Any = settings.value("endpoint/server", "1.1.1.1")
+        port_raw: Any = settings.value("endpoint/port", 443)
+        interval_raw: Any = settings.value("monitor/interval_s", 1.0)
+        timeout_raw: Any = settings.value("monitor/timeout_s", 1.0)
+
+        return cls(
+            server=str(server_raw),
+            port=int(port_raw),
+            interval_s=float(interval_raw),
+            timeout_s=float(timeout_raw)
+        )
+
+
+
 def is_valid_ip_address(host: str) -> bool:
     try:
         ipaddress.ip_address(host)
@@ -41,8 +69,6 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Settings")
-
-        self.settings_store = QSettings("RomanJay", "NetworkMonitor")
 
         self.server_line_edit = QLineEdit()
         self.server_line_edit.setPlaceholderText("e.g., 1.1.1.1")
@@ -190,25 +216,22 @@ class SettingsDialog(QDialog):
 
 
     def _load_settings(self) -> None:
-        server = str(self.settings_store.value("endpoint/server", "1.1.1.1", type=str))
-        port = str(self.settings_store.value("endpoint/port", "443"))
-        interval_s = str(self.settings_store.value("monitor/interval_s", 1.0))
-        timeout_s = str(self.settings_store.value("monitor/timeout_s", 1.0))
+        config = MonitorConfig.load()
 
-        self.server_line_edit.setText(server)
-        self.port_spin_box.setValue(int(port))
+        self.server_line_edit.setText(config.server)
+        self.port_spin_box.setValue(int(config.port))
 
         self._set_seconds_group_value(
             self.interval_button_group,
             self.interval_custom_radio_button,
             self.interval_custom_spin_box,
-            float(interval_s),
+            float(config.interval_s),
         )
         self._set_seconds_group_value(
             self.timeout_button_group,
             self.timeout_custom_radio_button,
             self.timeout_custom_spin_box,
-            float(timeout_s)
+            float(config.timeout_s)
         )
 
 
@@ -259,9 +282,5 @@ class SettingsDialog(QDialog):
             QMessageBox.critical(self, "Invalid IP", f"'{config.server}' is not a valid IP address.")
             return
 
-        self.settings_store.setValue("endpoint/server", config.server)
-        self.settings_store.setValue("endpoint/port", config.port)
-        self.settings_store.setValue("monitor/interval_s", config.interval_s)
-        self.settings_store.setValue("monitor/timeout_s", config.timeout_s)
-
+        config.save()
         self.accept()
