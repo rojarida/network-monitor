@@ -126,14 +126,14 @@ Fixed issue where the uptime/downtime was resetting when changing endpoints
 - The application now preserves phase timers
 
 ### 0.5.0
-Added a third connectivity check for servers that are unreachable
-- Fallback server to distinguish `Offline` from `Server Unreachable`
+Added a third connectivity state: `Server Unreachable`
+- Uses a fallback server to distinguish `Offline` (no internet connectivity) from `Server Unreachable` (internet is stable, target not reachable)
 
 Settings now accepts three methods of endpoints
-- IP Addresses (IPv4 and IPv6)
-- Hostnames (google.com)
-- URLs (https://www.google.com/)
+- IP Addresses (IPv4/IPv6)
+- Hostnames (`google.com`)
+- URLs (e.g., `https://www.google.com/`)
 
-Updated UI to include the new unreachable state
+Updated UI and styling to support the **Server Unreachable** state 
 
-Added tooltips (on hover) for status
+Added a status tooltip (hover) with extra details
