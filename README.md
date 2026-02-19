@@ -67,6 +67,7 @@ python -m network_monitor
 - [ ] Latency statistics (minimum/average/maximum over last N checks)
 - [ ] History Viewing (recent checks table)
 - [x] UI Polish (improved layout and clear visual indicators)
+- [ ] Include tooltips on all metrics to provide more detailed information
 
 ## Bugs
 - [x] Statistics keep resetting on status change (fixed in [0.3.1](#031))
@@ -123,3 +124,16 @@ Layout refactor and polished UI
 ### 0.4.0
 Fixed issue where the uptime/downtime was resetting when changing endpoints
 - The application now preserves phase timers
+
+### 0.5.0
+Added a third connectivity check for servers that are unreachable
+- Fallback server to distinguish `Offline` from `Server Unreachable`
+
+Settings now accepts three methods of endpoints
+- IP Addresses (IPv4 and IPv6)
+- Hostnames (google.com)
+- URLs (https://www.google.com/)
+
+Updated UI to include the new unreachable state
+
+Added tooltips (on hover) for status
