@@ -70,9 +70,11 @@ QLabel#metric_value[kind="pill"][metric="server"] {
 }
 
 /* When status is DOWN, change pills to red */
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="phase"],
 QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="latency"],
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="downtime"],
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="phase"] {
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="disconnects"],
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="uptime"],
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="downtime"] {
   background: #C41E3A; /* Cardinal Red */
 }
 

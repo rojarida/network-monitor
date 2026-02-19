@@ -62,40 +62,40 @@ class MonitorView(QWidget):
         self.status_label.setProperty("status", "unknown")
         self.status_label.setProperty("kind", "pill")
 
+        phase_row, self.phase_label, self.phase_value = self._make_metric_row("Current phase")
+        self.phase_value.setProperty("metric", "phase")
+
+        server_row, _server_label, self.server_value = self._make_metric_row("Server")
+        self.server_value.setProperty("metric", "server")
+
         status_row = QHBoxLayout()
         status_row.setContentsMargins(0, 0, 0, 0)
         status_row.setSpacing(0)
         status_row.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignHCenter)
         stats_layout.addLayout(status_row)
+        stats_layout.addWidget(self._make_separator("separator_top"))
+        stats_layout.addWidget(server_row)
 
-        # Separator between status and stats
         stats_layout.addWidget(self._make_separator("separator_top"))
 
         # Metric rows
-        server_row, self.server_value = self._make_metric_row("Server")
-        self.server_value.setProperty("metric", "server")
-
-        latency_row, self.latency_value = self._make_metric_row("Latency")
+        latency_row, _latency_label, self.latency_value = self._make_metric_row("Latency")
         self.latency_value.setProperty("metric", "latency")
 
-        disconnects_row, self.disconnects_value = self._make_metric_row("Disconnects")
+        disconnects_row, _disconnects_label, self.disconnects_value = self._make_metric_row("Disconnects")
         self.disconnects_value.setProperty("metric", "disconnects")
 
-        uptime_row, self.total_uptime_value = self._make_metric_row("Total uptime")
+        uptime_row, _uptime_label, self.total_uptime_value = self._make_metric_row("Total uptime")
         self.total_uptime_value.setProperty("metric", "uptime")
 
-        downtime_row, self.total_downtime_value = self._make_metric_row("Total downtime")
+        downtime_row, _downtime_label, self.total_downtime_value = self._make_metric_row("Total downtime")
         self.total_downtime_value.setProperty("metric", "downtime")
 
-        phase_row, self.current_phase_value = self._make_metric_row("Current phase")
-        self.current_phase_value.setProperty("metric", "phase")
-
-        stats_layout.addWidget(server_row)
+        stats_layout.addWidget(phase_row)
         stats_layout.addWidget(latency_row)
         stats_layout.addWidget(disconnects_row)
         stats_layout.addWidget(uptime_row)
         stats_layout.addWidget(downtime_row)
-        stats_layout.addWidget(phase_row)
         stats_layout.addSpacing(8)
 
         root_layout.addWidget(stats_container)
@@ -159,7 +159,7 @@ class MonitorView(QWidget):
         return wrapper
 
 
-    def _make_metric_row(self, key_text: str) -> tuple[QWidget, QLabel]:
+    def _make_metric_row(self, key_text: str) -> tuple[QWidget, QLabel, QLabel]:
         row = QWidget()
         row.setObjectName("metric_row")
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -179,7 +179,7 @@ class MonitorView(QWidget):
         layout.addStretch(1)
         layout.addWidget(value_label)
 
-        return row, value_label
+        return row, key_label, value_label
 
 
     def _repolish(self, widget: QWidget) -> None:
@@ -207,15 +207,23 @@ class MonitorView(QWidget):
 
         if self.property("status") != new_status:
             self.setProperty("status", new_status)
-            self._repolish(self)
-            self._repolish(self.total_downtime_value)
-            self._repolish(self.current_phase_value)
-            self._repolish(self.latency_value)
-            self._repolish(self.disconnects_value)
+            for label in self.findChildren(QLabel, "metric_value"):
+                self._repolish(label)
 
         if self.status_label.property("status") != new_status:
             self.status_label.setProperty("status", new_status)
             self._repolish(self.status_label)
+
+        if getattr(self, "phase_label", None) is not None:
+            if new_status == "online":
+                phase_text = "Online for"
+            elif new_status == "offline":
+                phase_text = "Offline for"
+            else:
+                phase_text = "-"
+
+            if self.phase_label.text() != phase_text:
+                self.phase_label.setText(phase_text)
 
         # Server
         self.server_value.setText(f"{self.monitor_state.server}:{self.monitor_state.port}")
@@ -264,7 +272,7 @@ class MonitorView(QWidget):
 
         # Phase
         current_phase_seconds = self.monitor_state.current_phase_seconds()
-        self.current_phase_value.setText(format_seconds_as_hhmmss(current_phase_seconds))
+        self.phase_value.setText(format_seconds_as_hhmmss(current_phase_seconds))
 
 
     def apply_config(self, config: MonitorConfig) -> None:
