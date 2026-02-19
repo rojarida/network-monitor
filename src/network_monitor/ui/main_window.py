@@ -13,7 +13,7 @@ class MainWindow(QMainWindow):
 
         self.monitor_view = MonitorView(self)
         self.setCentralWidget(self.monitor_view)
-        self.setMinimumSize(240, 310)
+        self.setFixedSize(240, 310)
 
         self.monitor_view.settings_requested.connect(self.open_settings)
 

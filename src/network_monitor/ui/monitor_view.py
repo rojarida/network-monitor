@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, QTimer, Signal, Qt
+from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtWidgets import (
     QWidget, 
     QLabel, 
@@ -54,8 +54,7 @@ class MonitorView(QWidget):
         stats_container = QWidget()
         stats_container.setObjectName("stats_container")
         stats_layout = QVBoxLayout(stats_container)
-        stats_layout.setContentsMargins(8, 8, 8, 8)
-        stats_layout.setSpacing(8)
+        stats_layout.setContentsMargins(8, 8, 8, 0)
 
         # Status
         self.status_label = QLabel("...")
@@ -97,6 +96,7 @@ class MonitorView(QWidget):
         stats_layout.addWidget(uptime_row)
         stats_layout.addWidget(downtime_row)
         stats_layout.addWidget(phase_row)
+        stats_layout.addSpacing(8)
 
         root_layout.addWidget(stats_container)
 
@@ -162,6 +162,7 @@ class MonitorView(QWidget):
     def _make_metric_row(self, key_text: str) -> tuple[QWidget, QLabel]:
         row = QWidget()
         row.setObjectName("metric_row")
+        row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         layout = QHBoxLayout(row)
         layout.setContentsMargins(0, 0, 0, 0)
