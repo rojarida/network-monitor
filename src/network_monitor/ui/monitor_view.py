@@ -197,34 +197,48 @@ class MonitorView(QWidget):
 
 
     def refresh_labels(self) -> None:
-        last_status = self.monitor_state.last_status_ok
+        last_status = self.monitor_state.last_status
 
         if last_status is None:
             self.status_label.setText("...")
             new_status = "unknown"
+        elif last_status == "online":
+            self.status_label.setText("Online")
+            self.status_label.setToolTip("Internet is stable")
+            new_status = "online"
+        elif last_status == "offline":
+            self.status_label.setText("Offline")
+            self.status_label.setToolTip("No internet access")
+            new_status = "offline"
         else:
-            self.status_label.setText('Online' if last_status else 'Offline')
-            new_status = "online" if last_status else "offline"
+            # Unreachable
+            self.status_label.setText("Unreachable")
+            self.status_label.setToolTip("Server unreachable (internet is stable)")
+            new_status = "unreachable"
 
+        # Root status 
         if self.property("status") != new_status:
             self.setProperty("status", new_status)
             for label in self.findChildren(QLabel, "metric_value"):
                 self._repolish(label)
 
+        # Status selectors
         if self.status_label.property("status") != new_status:
             self.status_label.setProperty("status", new_status)
             self._repolish(self.status_label)
 
-        if getattr(self, "phase_label", None) is not None:
-            if new_status == "online":
-                phase_text = "Online for"
-            elif new_status == "offline":
-                phase_text = "Offline for"
-            else:
-                phase_text = "-"
+        # Phase label
+        if new_status == "online":
+            phase_text = "Online for"
+        elif new_status == "offline":
+            phase_text = "Offline for"
+        elif new_status == "unreachable":
+            phase_text = "Unreachable for"
+        else:
+            phase_text = "-"
 
-            if self.phase_label.text() != phase_text:
-                self.phase_label.setText(phase_text)
+        if self.phase_label.text() != phase_text:
+            self.phase_label.setText(phase_text)
 
         # Server
         self.server_value.setText(f"{self.monitor_state.server}:{self.monitor_state.port}")

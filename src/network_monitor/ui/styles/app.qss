@@ -37,6 +37,11 @@ QLabel#status_label[status="offline"] {
   color: white;
 }
 
+QLabel#status_label[status="unreachable"] {
+  background: #DAA520; /* Goldenrod */
+  color: white;
+}
+
 QLabel#status_label[status="unknown"] {
   background-color: palette(mid);
   color: palette(button-text);
@@ -65,22 +70,25 @@ QLabel#metric_value[kind="pill"] {
   background: #228B22; /* Forest Green */
 }
 
-QLabel#metric_value[kind="pill"][metric="server"] {
-  background: #0F52BA; /* Sapphire Blue */
+/* When status is DOWN, change pills to red */
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"] {
+  background: #C41E3A; /* Cardinal Red */
 }
 
-/* When status is DOWN, change pills to red */
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="phase"],
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="latency"],
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="disconnects"],
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="uptime"],
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="downtime"] {
-  background: #C41E3A; /* Cardinal Red */
+/* When status is UNREACHABLE, change pills to yellow */
+QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"] {
+  background: #DAA520; /* Goldenrod */
+}
+
+/* Keep server pill blue */
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="server"],
+QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"][metric="server"] {
+  background: #0F52BA; /* Sapphire Blue */
 }
 
 /* Latency severity */
 QLabel#metric_value[kind="pill"][metric="latency"][level="warn"] {
-  background: #FFC000; /* Golden Yellow */
+  background: #DAA520; /* Goldenrod */
 }
 
 QLabel#metric_value[kind="pill"][metric="latency"][level="bad"] {
@@ -89,12 +97,13 @@ QLabel#metric_value[kind="pill"][metric="latency"][level="bad"] {
 
 /* Disconnect severity */
 QLabel#metric_value[kind="pill"][metric="disconnects"][level="warn"] {
-  background: #FFC000; /* Golden Yellow */
+  background: #DAA520; /* Goldenrod */
 }
 
 QLabel#metric_value[kind="pill"][metric="disconnects"][level="bad"] {
   background: #C41E3A; /* Cardinal Red */
 }
+
 
 /* ------SEPARATOR & BOTTOM BAR ------- */
 
