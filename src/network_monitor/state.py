@@ -64,29 +64,21 @@ class MonitorState:
         self.last_state_change_time = check_result.timestamp
 
 
-    def endpoint_changed(self) -> None:
-        # Keep totals, but close out current phase and restart tracking
-        now = time.monotonic()
+    def set_endpoint(self, server: str, port: int) -> None:
+        if self.server == server and self.port == port:
+            return
 
-        # Check status before switching endpoints
-        was_up_before_change = (self.last_status_ok is True)
-
-        # If in a known state, finalize the current phase into totals
-        if self.last_status_ok is not None:
-            elapsed = max(0.0, now - self.last_state_change_time)
-            if self.last_status_ok:
-                self.total_uptime_seconds += elapsed
-            else:
-                self.total_downtime_seconds += elapsed
-
-        # New endpoint starts "unknown"
-        self.last_status_ok = None
-        self.last_state_change_time = now
+        self.server = server
+        self.port = port
         self.last_latency_ms = None
 
-        # If status was previously UP, and the endpoint status is DOWN
-        # Consider it as a disconnect
-        self.pending_disconnect_if_first_result_down = was_up_before_change
+
+    def endpoint_changed(self) -> None:
+        """
+        Endpoint changes are NOT connectivity changes.
+        """
+        self.last_latency_ms = None
+        self.pending_disconnect_if_first_result_down = False
 
 
     def current_phase_seconds(self) -> float:

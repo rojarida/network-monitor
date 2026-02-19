@@ -280,10 +280,7 @@ class MonitorView(QWidget):
         # Stop current monitor
         self.monitor_thread.stop()
         self.monitor_thread.wait(1500)
-
-        self.monitor_state.server = config.server
-        self.monitor_state.port = config.port
-        self.monitor_state.endpoint_changed()
+        self.monitor_state.set_endpoint(config.server, config.port)
 
         # Restart thread with new configuration
         self.monitor_thread = MonitorThread(
@@ -297,7 +294,7 @@ class MonitorView(QWidget):
         self.monitor_thread.start()
 
         # Update label
-        self.server_value.setText(f"Server: {config.server}:{config.port}")
+        self.server_value.setText(f"{config.server}:{config.port}")
         self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
         self._repolish(self.status_label)
