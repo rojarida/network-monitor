@@ -66,11 +66,12 @@ python -m network_monitor
 - [ ] Start / Stop monitoring controls
 - [ ] Latency statistics (minimum/average/maximum over last N checks)
 - [ ] History Viewing (recent checks table)
-- [ ] UI Polish (improved layout and clear visual indicators)
+- [x] UI Polish (improved layout and clear visual indicators)
 
 ## Bugs
 - [x] Statistics keep resetting on status change (fixed in [0.3.1](#031))
 - [x] Disconnects aren't being incremented/tracked (fixed in [0.3.2](#032))
+- [ ] When changing interval checks and timeout checks, the current phase resets
 
 ## Changelog
 ### 0.1.0
@@ -115,3 +116,6 @@ Similar to [0.3.3](#033), change pills dynamically for latency
 - If latency is less than 100, color is green
 - If latency is 100 - 199, color is yellow
 - If latency is 200+, color is red
+
+### 0.3.5
+Layout refactor and polished UI
