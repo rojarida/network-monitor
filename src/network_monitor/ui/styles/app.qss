@@ -98,7 +98,8 @@ QLabel#metric_value[kind="pill"][metric="disconnects"][level="bad"] {
 
 /* ------SEPARATOR & BOTTOM BAR ------- */
 
-QFrame#separator_top, 
+QFrame#separator_top,
+QFrame#separator_middle,
 QFrame#separator_bottom {
   border: none;
   min-height: 2px;

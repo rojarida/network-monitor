@@ -94,6 +94,7 @@ class MonitorView(QWidget):
         stats_layout.addWidget(phase_row)
         stats_layout.addWidget(latency_row)
         stats_layout.addWidget(disconnects_row)
+        stats_layout.addWidget(self._make_separator("separator_middle"))
         stats_layout.addWidget(uptime_row)
         stats_layout.addWidget(downtime_row)
         stats_layout.addSpacing(8)
