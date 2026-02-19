@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+from typing import Literal
 from dataclasses import dataclass
 import time
 
 
+ConnectionStatus = Literal["online", "offline", "unreachable"]
+
+
 @dataclass
 class CheckResult:
-    ok: bool
+    status: ConnectionStatus
     latency_ms: float | None
     timestamp: float
+    error_kind: str | None = None
 
 
 @dataclass
@@ -20,47 +25,53 @@ class MonitorState:
     total_uptime_seconds: float = 0.0
     total_downtime_seconds: float = 0.0
 
-    last_status_ok: bool | None = None
+    last_status: ConnectionStatus | None = None
     last_state_change_time: float = 0.0
     last_latency_ms: float | None = None
-
-    pending_disconnect_if_first_result_down: bool = False
+    last_error_kind: str | None = None
 
 
     def start(self) -> None:
         now = time.monotonic()
-        self.last_status_ok = None
+        self.last_status = None
         self.last_state_change_time = now
+        self.last_latency_ms = None
+        self.last_error_kind = None
 
 
     def apply(self, check_result: CheckResult) -> None:
-        # Store latency on when UP
-        self.last_latency_ms = check_result.latency_ms if check_result.ok else None
+        # Store latest "detail" information
+        self.last_error_kind = check_result.error_kind
+        self.last_latency_ms = (
+            check_result.latency_ms if check_result.status == "online" else None
+        )
 
         # First check after startup or endpoint change
-        if self.last_status_ok is None:
-            if self.pending_disconnect_if_first_result_down and (check_result.ok is False):
-                self.disconnects += 1
-
-            self.pending_disconnect_if_first_result_down = False
-            self.last_status_ok = check_result.ok
+        if self.last_status is None:
+            self.last_status = check_result.status
             self.last_state_change_time = check_result.timestamp
             return
-        
-        # No status change
-        if check_result.ok == self.last_status_ok:
+
+        # No state change
+        if check_result.status == self.last_status:
             return
 
         elapsed_in_previous_state = max(0.0, check_result.timestamp - self.last_state_change_time)
 
-        if self.last_status_ok:
+        # Close out previous phase
+        if self.last_status == "online":
             self.total_uptime_seconds += elapsed_in_previous_state
-            # last_status_ok is True and transition implies DOWN
-            self.disconnects += 1
+
+            # Only count a disconnect when leaving online
+            if check_result.status != "online":
+                self.disconnects +=1
+        
         else:
+            # Offline/unreachable both count as downtime
             self.total_downtime_seconds += elapsed_in_previous_state
 
-        self.last_status_ok = check_result.ok
+        # Start new phase
+        self.last_status = check_result.status
         self.last_state_change_time = check_result.timestamp
 
 
@@ -71,6 +82,7 @@ class MonitorState:
         self.server = server
         self.port = port
         self.last_latency_ms = None
+        self.last_error_kind = None
 
 
     def endpoint_changed(self) -> None:
@@ -78,7 +90,7 @@ class MonitorState:
         Endpoint changes are NOT connectivity changes.
         """
         self.last_latency_ms = None
-        self.pending_disconnect_if_first_result_down = False
+        self.last_error_kind = None
 
 
     def current_phase_seconds(self) -> float:
@@ -90,10 +102,10 @@ class MonitorState:
         total_downtime = self.total_downtime_seconds
         current_phase = self.current_phase_seconds()
 
-        if self.last_status_ok is None:
+        if self.last_status is None:
             return (total_uptime, total_downtime)
 
-        if self.last_status_ok:
+        if self.last_status == "online":
             total_uptime += current_phase
         else:
             total_downtime += current_phase
