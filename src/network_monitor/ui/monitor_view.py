@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QTimer, Signal, Qt
+from PySide6.QtCore import QSize, QTimer, Signal, Qt
 from PySide6.QtWidgets import (
     QWidget, 
     QLabel, 
@@ -18,6 +18,10 @@ from network_monitor.ui.settings_dialog import MonitorConfig
 
 def format_seconds_as_hhmmss(seconds: float) -> str:
     seconds = int(seconds)
+
+    if seconds <= 0:
+        return "-"
+
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
     remaining_seconds = seconds % 60
@@ -51,28 +55,22 @@ class MonitorView(QWidget):
         stats_container.setObjectName("stats_container")
         stats_layout = QVBoxLayout(stats_container)
         stats_layout.setContentsMargins(8, 8, 8, 8)
+        stats_layout.setSpacing(8)
 
         # Status
         self.status_label = QLabel("...")
         self.status_label.setObjectName("status_label")
         self.status_label.setProperty("status", "unknown")
         self.status_label.setProperty("kind", "pill")
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         status_row = QHBoxLayout()
         status_row.setContentsMargins(0, 0, 0, 0)
         status_row.setSpacing(0)
-        status_row.addStretch(1)
-        status_row.addWidget(self.status_label)
-        status_row.addStretch(1)
-        stats_layout.addSpacing(8)
+        status_row.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignHCenter)
         stats_layout.addLayout(status_row)
 
         # Separator between status and stats
-        separator_top = QFrame()
-        separator_top.setObjectName("separator_top")
-        separator_top.setFrameShape(QFrame.Shape.NoFrame)
-        stats_layout.addWidget(separator_top)
+        stats_layout.addWidget(self._make_separator("separator_top"))
 
         # Metric rows
         server_row, self.server_value = self._make_metric_row("Server")
@@ -101,30 +99,27 @@ class MonitorView(QWidget):
         stats_layout.addWidget(phase_row)
 
         root_layout.addWidget(stats_container)
-        root_layout.addStretch(1)
 
-        # Separator between Current Phase and Settings button
-        separator_bottom = QFrame()
-        separator_bottom.setObjectName("separator_bottom")
-        separator_bottom.setFrameShape(QFrame.Shape.NoFrame)
-        root_layout.addWidget(separator_bottom)
+        # Separator between current phase and settings button
+        root_layout.addWidget(self._make_inset_separator_row("separator_bottom", inset=8))
 
-        # Bottom bar
-        bottom_bar = QFrame()
-        bottom_bar.setObjectName("bottom_bar")
-        bottom_bar_layout = QHBoxLayout(bottom_bar)
-        bottom_bar_layout.setContentsMargins(8, 4, 8, 10)
+        # Settings bar
+        settings_bar = QFrame()
+        settings_bar.setObjectName("settings_bar")
+        settings_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        settings_bar_layout = QHBoxLayout(settings_bar)
+        settings_bar_layout.setContentsMargins(8, 4, 8, 0)
+        settings_bar_layout.setSpacing(8)
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.setObjectName("settings_button")
-        self.settings_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.settings_button.setProperty("kind", "pill")
         self.settings_button.clicked.connect(self.settings_requested.emit)
 
-        bottom_bar_layout.addStretch(1)
-        bottom_bar_layout.addWidget(self.settings_button)
-        bottom_bar_layout.addStretch(1)
+        settings_bar_layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-        root_layout.addWidget(bottom_bar)
+        root_layout.addWidget(settings_bar)
 
         # Monitor thread and UI refresh
         self.monitor_thread = MonitorThread(
@@ -141,6 +136,27 @@ class MonitorView(QWidget):
         self.ui_refresh_timer.setInterval(250)
         self.ui_refresh_timer.timeout.connect(self.refresh_labels)
         self.ui_refresh_timer.start()
+
+
+    def _make_separator(self, name: str) -> QFrame:
+        line = QFrame()
+        line.setObjectName(name)
+        line.setFrameShape(QFrame.Shape.NoFrame)
+        line.setFixedHeight(1)
+        line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        return line
+
+
+    def _make_inset_separator_row(self, name: str, inset: int = 8) -> QWidget:
+        wrapper = QWidget()
+        wrapper.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        wrapper_layout = QHBoxLayout(wrapper)
+        wrapper_layout.setContentsMargins(inset, 0, inset, 0)
+        wrapper_layout.setSpacing(0)
+        wrapper_layout.addWidget(self._make_separator(name))
+
+        return wrapper
 
 
     def _make_metric_row(self, key_text: str) -> tuple[QWidget, QLabel]:
@@ -185,8 +201,8 @@ class MonitorView(QWidget):
             self.status_label.setText("...")
             new_status = "unknown"
         else:
-            self.status_label.setText('UP' if last_status else 'DOWN')
-            new_status = "up" if last_status else "down"
+            self.status_label.setText('Online' if last_status else 'Offline')
+            new_status = "online" if last_status else "offline"
 
         if self.property("status") != new_status:
             self.setProperty("status", new_status)

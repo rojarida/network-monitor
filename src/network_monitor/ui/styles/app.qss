@@ -17,20 +17,22 @@ QWidget#stats_container {
 /* ------ STATUS ------ */
 
 QLabel#status_label {
-  min-height: 32px;
-  max-height: 32px;
+  qproperty-alignment: 'AlignVCenter | AlignCenter';
+  min-height: 40px;
+  max-height: 40px;
+  border-radius: 20px;
   min-width: 20px;
   padding: 0px 18px;
-  border-radius: 16px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 25px;
 }
 
-QLabel#status_label[status="up"] {
+QLabel#status_label[status="online"] {
   background-color: #228B22; /* Forest Green */
   color: white;
 }
 
-QLabel#status_label[status="down"] {
+QLabel#status_label[status="offline"] {
   background-color: #C41E3A; /* Cardinal Red */
   color: white;
 }
@@ -47,18 +49,20 @@ QLabel#metric_key {
 }
 
 QLabel#metric_value {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 17px;
+  color: white;
 }
 
 /* Base pill styling */
 QLabel#metric_value[kind="pill"] {
-  qproperty-alignment: 'AlignVCenter | AlignRight';
-  max-height: 22px;
-  min-height: 22px;
+  qproperty-alignment: 'AlignVCenter | AlignCenter';
+  max-height: 24px;
+  min-height: 24px;
+  min-width: 10px;
   padding: 0px 12px;
-  border-radius: 11px;
+  border-radius: 12px;
   background: #228B22; /* Forest Green */
-  color: white;
 }
 
 QLabel#metric_value[kind="pill"][metric="server"] {
@@ -66,9 +70,9 @@ QLabel#metric_value[kind="pill"][metric="server"] {
 }
 
 /* When status is DOWN, change pills to red */
-QWidget#monitor_view[status="down"] QLabel#metric_value[kind="pill"][metric="latency"],
-QWidget#monitor_view[status="down"] QLabel#metric_value[kind="pill"][metric="downtime"],
-QWidget#monitor_view[status="down"] QLabel#metric_value[kind="pill"][metric="phase"] {
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="latency"],
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="downtime"],
+QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="phase"] {
   background: #C41E3A; /* Cardinal Red */
 }
 
@@ -97,11 +101,10 @@ QFrame#separator_bottom {
   border: none;
   min-height: 2px;
   max-height: 2px;
-  background: palette(mid);
-  margin: 10px 0px;
+  background: palette(light);
 }
 
-QFrame#bottom_bar {
+QFrame#settings_bar {
   background: palette(base);
   padding-top: 2px;
   padding-bottom: 6px;
@@ -110,28 +113,24 @@ QFrame#bottom_bar {
 
 /* ---------- BUTTONS ---------- */
 
-QPushButton {
-  min-height: 32px;
-  padding: 0px 18px;
-  border-radius: 16px;
+QPushButton#settings_button {
+  min-width: 100px;
+  min-height: 30px;
+  max-height: 30px;
+  border-radius: 15px;
+  padding: 0px 10px;
+  font-weight: 300;
+  font-size: 14px;
+
   border: 2px solid palette(mid);
   background: palette(button);
   color: palette(button-text);
 }
 
-QPushButton:hover {
-  background: palette(light);
-}
-
-QPushButton:pressed {
+QPushButton#settings_button:hover {
   background: palette(midlight);
 }
 
-QPushButton:disabled {
-  border-color: palette(dark);
-  color: palette(mid);
-}
-
-QPushButton#settings_button {
-  min-width: 100px;
+QPushButton#settings_button:pressed {
+  background: palette(light);
 }
