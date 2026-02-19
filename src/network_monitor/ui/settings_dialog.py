@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import ipaddress
-from typing import Any, ClassVar
+import re
+
+from urllib.parse import urlsplit
+from typing import Any
 from dataclasses import dataclass
 
 from PySide6.QtCore import QSettings
@@ -19,6 +22,12 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QSpinBox,
     QVBoxLayout,
+)
+
+# Regex for handling URLs
+_HOSTNAME_RE = re.compile(
+    r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)"
+    r"(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*\.?$"
 )
 
 
@@ -56,13 +65,77 @@ class MonitorConfig:
         )
 
 
+def parse_endpoint(raw_text: str, default_port: int) -> tuple[str, int]:
+    """
+    Accepts:
+        - IP=           1.1.1.1
+        - Hostname=     google.com, localhost
+        - Host:Port=    google.com:443, 1.1.1.1:443
+        - URL=          https://google.com, http://example.com:8080/path
 
-def is_valid_ip_address(host: str) -> bool:
+    Returns (host, port) normalized for a TCP socket.
+    """
+    text = raw_text.strip()
+    if not text:
+        raise ValueError("Endpoint is empty")
+
+    # Full URL (https://example.com or http://example.com:1234)
+    if "://" in text:
+        parts = urlsplit(text)
+        if not parts.hostname:
+            raise ValueError("Invalid URL")
+
+        host = parts.hostname
+        if parts.port is not None:
+            port = parts.port
+        else:
+            if parts.scheme == "https":
+                port = 443
+            elif parts.scheme == "http":
+                port = 80
+            else:
+                port = default_port
+
+        if not (1 <= int(port) <= 65535):
+            raise ValueError("Port out of range")
+
+        return host, int(port)
+
+    try:
+        ipaddress.ip_address(text)
+        if not (1 <= int(default_port) <= 65535):
+            raise ValueError("Port out of range")
+        return text, int(default_port)
+    except ValueError:
+        pass
+
+    # Host:Port
+    parts = urlsplit(f"dummy://{text}")
+    if not parts.hostname:
+        raise ValueError("Invalid target")
+
+    host = parts.hostname
+    port = parts.port if parts.port is not None else default_port
+
+    if not (1 <= int(port) <= 65535):
+        raise ValueError("Port out of range")
+
+    # Valdiate host (IP or hostname)
     try:
         ipaddress.ip_address(host)
-        return True
+        return host, int(port)
     except ValueError:
-        return False
+        pass
+
+    try:
+        ascii_host = host.encode("idna").decode("ascii")
+    except Exception as exc:
+        raise ValueError("Invalid hostname") from exc
+
+    if not _HOSTNAME_RE.match(ascii_host.rstrip(".")):
+        raise ValueError("Invalid hostname")
+
+    return host, int(port)
 
 
 class SettingsDialog(QDialog):
@@ -71,7 +144,9 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Settings")
 
         self.server_line_edit = QLineEdit()
-        self.server_line_edit.setPlaceholderText("e.g., 1.1.1.1")
+        self.server_line_edit.setPlaceholderText(
+            "e.g., 1.1.1.1, google.com, https://google.com, localhost:8000"
+        )
 
         self.port_spin_box = QSpinBox()
         self.port_spin_box.setRange(1, 65535)
@@ -101,12 +176,14 @@ class SettingsDialog(QDialog):
 
         self.validation_label = QLabel("")
 
-        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Save)
+        self.button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Save
+        )
         self.button_box.accepted.connect(self._save_and_close)
         self.button_box.rejected.connect(self.reject)
 
         form_layout = QFormLayout()
-        form_layout.addRow("Server IP: ", self.server_line_edit)
+        form_layout.addRow("Target: ", self.server_line_edit)
         form_layout.addRow("Port: ", self.port_spin_box)
         form_layout.addRow("Check Interval: ", self.interval_group_box)
         form_layout.addRow("Timeout: ", self.timeout_group_box)
@@ -236,51 +313,72 @@ class SettingsDialog(QDialog):
 
 
     def _update_validation_ui(self) -> None:
-        server_text = self.server_line_edit.text().strip()
+        endpoint_text = self.server_line_edit.text().strip()
 
         save_button = self.button_box.button(QDialogButtonBox.StandardButton.Save)
         if save_button is None:
             return
 
-        if server_text == "":
+        if endpoint_text == "":
             self.validation_label.setText("")
             self.server_line_edit.setStyleSheet("")
             save_button.setEnabled(False)
             return
 
-        is_valid = is_valid_ip_address(server_text)
+        try:
+            host, parsed_port = parse_endpoint(
+                endpoint_text,
+                default_port=int(self.port_spin_box.value()),
+            )
+        except ValueError:
+            self.validation_label.setText("Please enter an IP, hostname, or URL.")
+            self.server_line_edit.setStyleSheet("border: 1px solid #CC3333")
+            save_button.setEnabled(False)
+            return
 
-        self.validation_label.setText("" if is_valid else "Please enter a valid IPv4 or IPv6 address.")
-        self.server_line_edit.setStyleSheet("" if is_valid else "border: 1px solid #CC3333")
-        save_button.setEnabled(is_valid)
+        # If the user typed a URL or host:port, sync the port field
+        if self.port_spin_box.value() != parsed_port:
+            self.port_spin_box.setValue(parsed_port)
 
+        self.validation_label.setText("")
+        self.server_line_edit.setStyleSheet("")
+        save_button.setEnabled(True)
+    
 
-    def current_config(self) -> MonitorConfig:
+    def _save_and_close(self) -> None:
+        raw_endpoint = self.server_line_edit.text().strip()
+
+        try:
+            host, port = parse_endpoint(
+                raw_endpoint,
+                default_port=int(self.port_spin_box.value()),
+            )
+        except ValueError:
+            QMessageBox.critical(
+                self,
+                "Invalid target",
+                f"'{raw_endpoint}' is not a valid IP, hostname, or URL."
+            )
+            return
+
         interval_s = self._selected_seconds(
             self.interval_button_group,
             self.interval_custom_radio_button,
             self.interval_custom_spin_box,
         )
+
         timeout_s = self._selected_seconds(
             self.timeout_button_group,
             self.timeout_custom_radio_button,
-            self.timeout_custom_spin_box
+            self.timeout_custom_spin_box,
         )
 
-        return MonitorConfig(
-            server=self.server_line_edit.text().strip(),
-            port=int(self.port_spin_box.value()),
-            interval_s=float(interval_s),
-            timeout_s=float(timeout_s),
+        config = MonitorConfig(
+            server=host,
+            port=int(port),
+            interval_s=interval_s,
+            timeout_s=timeout_s
         )
-
-    
-    def _save_and_close(self) -> None:
-        config = self.current_config()
-
-        if not is_valid_ip_address(config.server):
-            QMessageBox.critical(self, "Invalid IP", f"'{config.server}' is not a valid IP address.")
-            return
 
         config.save()
         self.accept()

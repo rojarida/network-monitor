@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QMainWindow, QDialog
 
 from network_monitor.ui.monitor_view import MonitorView
-from network_monitor.ui.settings_dialog import SettingsDialog
+from network_monitor.ui.settings_dialog import SettingsDialog, MonitorConfig
 
 
 class MainWindow(QMainWindow):
@@ -20,8 +20,8 @@ class MainWindow(QMainWindow):
 
     def open_settings(self) -> None:
         settings_dialog = SettingsDialog(self)
-        if settings_dialog.exec():
-            new_config = settings_dialog.current_config()
+        if settings_dialog.exec() == QDialog.DialogCode.Accepted:
+            new_config = MonitorConfig.load()
             self.monitor_view.apply_config(new_config)
 
 
