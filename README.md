@@ -71,7 +71,7 @@ python -m network_monitor
 ## Bugs
 - [x] Statistics keep resetting on status change (fixed in [0.3.1](#031))
 - [x] Disconnects aren't being incremented/tracked (fixed in [0.3.2](#032))
-- [ ] When changing interval checks and timeout checks, the current phase resets
+- [x] When changing interval checks and timeout checks, the current phase resets (fixed in [0.4.0](#040))
 
 ## Changelog
 ### 0.1.0
@@ -119,3 +119,7 @@ Similar to [0.3.3](#033), change pills dynamically for latency
 
 ### 0.3.5
 Layout refactor and polished UI
+
+### 0.4.0
+Fixed issue where the uptime/downtime was resetting when changing endpoints
+- The application now preserves phase timers
