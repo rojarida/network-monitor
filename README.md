@@ -5,17 +5,17 @@ When the target can't be reached, it uses a **fallback probe** to distinguish "n
 
 ## Screenshots
 
-### Online
+<h3 align="center">Online></h3>
 <p align="center">
     <img src="assets/screenshots/online.png" alt="Online">
 </p>
 
-### Unreachable
+<h3 align="center">Unreachable</h3>
 <p align="center">
     <img src="assets/screenshots/unreachable.png" alt="Unreachable">
 </p>
 
-### Offline
+<h3 align="center">Offline</h3>
 <p align="center">
     <img src="assets/screenshots/offline.png" alt="Offline">
 </p>
