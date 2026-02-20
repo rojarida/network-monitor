@@ -81,6 +81,7 @@ QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"] {
 }
 
 /* Keep server pill blue */
+QWidget#monitor_view[status="online"] QLabel#metric_value[kind="pill"][metric="server"],
 QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="server"],
 QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"][metric="server"] {
   background: #0F52BA; /* Sapphire Blue */
