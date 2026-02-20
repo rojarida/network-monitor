@@ -5,7 +5,7 @@ When the target can't be reached, it uses a **fallback probe** to distinguish "n
 
 ## Screenshots
 
-<h3 align="center">Online></h3>
+<h3 align="center">Online</h3>
 <p align="center">
     <img src="assets/screenshots/online.png" alt="Online">
 </p>
