@@ -121,6 +121,7 @@ python -m network_monitor
 - [x] Configurable endpoint (host:port) and interval/timeout
 - [x] Multiple state connectivity: Online/Offline/Unreachable
 - [x] UI polish (layout and visual indicators)
+- [x] Implement target method in settings
 - [ ] Disconnect debounce (reduce false disconnects)
 - [ ] Start / Stop monitoring controls
 - [ ] Latency statistics (min/avg/max over last N checks)
@@ -193,3 +194,20 @@ Settings now accepts three methods of endpoints
 Updated UI and styling to support the **Server Unreachable** state 
 
 Added a status tooltip (hover) with extra details
+
+### 0.6.0
+Added
+- Target Method selection in Settings: **IP Adress, Hostname, or URL**
+- Hostname input now supports `host[:port]` (port defaults to 443 if omitted)
+- URL input supports full URLs
+- Server pill now displays a "clean" target
+    - Hides default ports for Hostname/URL unless explicitly provided
+
+Changed
+- Server pill text handling
+    - Long targets are now middle-elided to prevent UI breaking
+    - Full target available on hover
+
+Fixed
+- Prevented long hostnames from breaking the layout
+- Improved target validation in settings
