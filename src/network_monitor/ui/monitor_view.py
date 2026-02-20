@@ -87,37 +87,25 @@ class MonitorView(QWidget):
         root_layout = QVBoxLayout(self)
         root_layout.setObjectName("root_layout")
         root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.setSpacing(0)
 
         # Statistic container
         stats_container = QWidget()
         stats_container.setObjectName("stats_container")
         stats_layout = QVBoxLayout(stats_container)
-        stats_layout.setContentsMargins(8, 8, 8, 0)
+        stats_layout.setContentsMargins(8, 6, 8, 6)
 
-        # Status
-        self.status_label = QLabel("...")
-        self.status_label.setObjectName("status_label")
+        # Labels and metrics
+        status_row, _status_key, status_pill = self._make_metric_row(
+            "Status",
+            center_value=True,
+            value_object_name="status_label")
+        self.status_label = status_pill
+        self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
-        self.status_label.setProperty("kind", "pill")
 
         phase_row, self.phase_label, self.phase_value = self._make_metric_row("Current phase")
         self.phase_value.setProperty("metric", "phase")
 
-        server_row, _server_label, self.server_value = self._make_metric_row("Server")
-        self.server_value.setProperty("metric", "server")
-
-        status_row = QHBoxLayout()
-        status_row.setContentsMargins(0, 0, 0, 0)
-        status_row.setSpacing(0)
-        status_row.addWidget(self.status_label, alignment=Qt.AlignmentFlag.AlignHCenter)
-        stats_layout.addLayout(status_row)
-        stats_layout.addWidget(self._make_separator("separator_top"))
-        stats_layout.addWidget(server_row)
-
-        stats_layout.addWidget(self._make_separator("separator_top"))
-
-        # Metric rows
         latency_row, _latency_label, self.latency_value = self._make_metric_row("Latency")
         self.latency_value.setProperty("metric", "latency")
 
@@ -130,27 +118,32 @@ class MonitorView(QWidget):
         downtime_row, _downtime_label, self.total_downtime_value = self._make_metric_row("Total downtime")
         self.total_downtime_value.setProperty("metric", "downtime")
 
+        server_row, _server_label, self.server_value = self._make_metric_row("Server")
+        self.server_value.setProperty("metric", "server")
+
+        stats_layout.addWidget(status_row)
+        stats_layout.addWidget(self._make_separator("separator_top"))
+        stats_layout.addWidget(server_row)
+        stats_layout.addWidget(self._make_separator("separator_top"))
+
         stats_layout.addWidget(phase_row)
         stats_layout.addWidget(latency_row)
         stats_layout.addWidget(disconnects_row)
         stats_layout.addWidget(self._make_separator("separator_middle"))
         stats_layout.addWidget(uptime_row)
         stats_layout.addWidget(downtime_row)
-        stats_layout.addSpacing(8)
 
-        root_layout.addWidget(stats_container)
-
-        # Separator between current phase and settings button
-        root_layout.addWidget(self._make_inset_separator_row("separator_bottom", inset=8))
+        # Separator between downtime and settings button
+        stats_layout.addWidget(self._make_separator("separator_bottom"))
 
         # Settings bar
         settings_bar = QFrame()
         settings_bar.setObjectName("settings_bar")
         settings_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        settings_bar_layout = QHBoxLayout(settings_bar)
-        settings_bar_layout.setContentsMargins(8, 4, 8, 0)
-        settings_bar_layout.setSpacing(8)
+        settings_bar_layout = QVBoxLayout(settings_bar)
+        settings_bar_layout.setContentsMargins(0, 0, 0, 0)
+        settings_bar_layout.setSpacing(0)
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.setObjectName("settings_button")
@@ -159,7 +152,9 @@ class MonitorView(QWidget):
 
         settings_bar_layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-        root_layout.addWidget(settings_bar)
+        stats_layout.addWidget(settings_bar)
+        stats_layout.addStretch(1)
+        root_layout.addWidget(stats_container)
 
         # Monitor thread and UI refresh
         self.monitor_thread = MonitorThread(
@@ -188,18 +183,12 @@ class MonitorView(QWidget):
         return line
 
 
-    def _make_inset_separator_row(self, name: str, inset: int = 8) -> QWidget:
-        wrapper = QWidget()
-        wrapper.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        wrapper_layout = QHBoxLayout(wrapper)
-        wrapper_layout.setContentsMargins(inset, 0, inset, 0)
-        wrapper_layout.setSpacing(0)
-        wrapper_layout.addWidget(self._make_separator(name))
-
-        return wrapper
-
-
-    def _make_metric_row(self, key_text: str) -> tuple[QWidget, QLabel, QLabel]:
+    def _make_metric_row(
+        self,
+        key_text: str,
+        *,
+        center_value: bool = False,
+        value_object_name: str = "metric_value") -> tuple[QWidget, QLabel, QLabel]:
         row = QWidget()
         row.setObjectName("metric_row")
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -212,15 +201,21 @@ class MonitorView(QWidget):
         key_label.setObjectName("metric_key")
 
         value_label = ElidedLabel() if key_text == "Server" else QLabel("-")
-        value_label.setObjectName("metric_value")
+        value_label.setObjectName(value_object_name)
         value_label.setProperty("kind", "pill")
 
         if key_text == "Server":
             value_label.setProperty("metric", "server")
             value_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
 
-        layout.addWidget(key_label, 1)
-        layout.addWidget(value_label, 0)
+        if center_value:
+            key_label.hide()
+            layout.addStretch(1)
+            layout.addWidget(value_label, 0)
+            layout.addStretch(1)
+        else:
+            layout.addWidget(key_label, 1)
+            layout.addWidget(value_label, 0)
 
         return row, key_label, value_label
 

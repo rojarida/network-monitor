@@ -18,13 +18,13 @@ QWidget#stats_container {
 
 QLabel#status_label {
   qproperty-alignment: 'AlignVCenter | AlignCenter';
-  min-height: 40px;
-  max-height: 40px;
-  border-radius: 20px;
+  min-height: 50px;
+  max-height: 50px;
+  border-radius: 25px;
   min-width: 20px;
   padding: 0px 18px;
   font-weight: 700;
-  font-size: 25px;
+  font-size: 30px;
 }
 
 QLabel#status_label[status="online"] {
@@ -50,6 +50,8 @@ QLabel#status_label[status="unknown"] {
 /* --------- METRICS --------- */
 
 QLabel#metric_key {
+  font-weight: 500;
+  font-size: 14px;
   color: palette(text);
 }
 
@@ -67,11 +69,11 @@ QLabel#metric_value[metric="server"] {
 /* Base pill styling */
 QLabel#metric_value[kind="pill"] {
   qproperty-alignment: 'AlignVCenter | AlignCenter';
-  max-height: 24px;
-  min-height: 24px;
+  max-height: 30px;
+  min-height: 30px;
   min-width: 10px;
   padding: 0px 12px;
-  border-radius: 12px;
+  border-radius: 15px;
   background: #228B22; /* Forest Green */
 }
 
@@ -124,8 +126,6 @@ QFrame#separator_bottom {
 
 QFrame#settings_bar {
   background: palette(base);
-  padding-top: 2px;
-  padding-bottom: 6px;
   border: none;
 }
 
@@ -136,9 +136,8 @@ QPushButton#settings_button {
   min-height: 30px;
   max-height: 30px;
   border-radius: 15px;
-  padding: 0px 10px;
-  font-weight: 300;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 15px;
 
   border: 2px solid palette(mid);
   background: palette(button);
