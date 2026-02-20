@@ -5,14 +5,20 @@ When the target can't be reached, it uses a **fallback probe** to distinguish "n
 
 ## Screenshots
 
-**Online**
-![Online](assets/screenshots/online.png)
+### Online
+<p align="center">
+    <img src="assets/screenshots/online.png" alt="Online">
+</p>
 
-**Unreachable**
-![Unreachable](assets/screenshots/unreachable.png)
+### Unreachable
+<p align="center">
+    <img src="assets/screenshots/unreachable.png" alt="Unreachable">
+</p>
 
-**Offline**
-![Offline](assets/screenshots/offline.png)
+### Offline
+<p align="center">
+    <img src="assets/screenshots/offline.png" alt="Offline">
+</p>
 
 # How It Works
 
@@ -56,6 +62,11 @@ Latency is measured as the TCP connect time (when `Online`).
 
 ```text
 .
+├── assets
+│   └── screenshots
+│       ├── offline.png
+│       ├── online.png
+│       └── unreachable.png
 ├── pyproject.toml
 ├── README.md
 └── src
@@ -76,6 +87,7 @@ Latency is measured as the TCP connect time (when `Online`).
                 ├── app.qss
                 └── __init__.py
 ```
+
 ## Setup
 
 ### Option A: uv (Recommended)
@@ -123,11 +135,9 @@ python -m network_monitor
 
 ## Changelog
 ### 0.1.0
-
 Initial working GUI with TCP connectivity checks (`1.1.1.1:443`) and basic network statistics.
 
 ### 0.2.0
-
 Added a settings dialog to configure the monitoring endpoint:
 - Server IP
 - Port
@@ -139,7 +149,6 @@ Added selectable monitoring parameters:
 Settings persist between launches.
 
 ### 0.3.0
-
 Fixed an issue where configurations weren't persistent.
 
 Improved UI
@@ -148,38 +157,31 @@ Improved UI
 - Tightened the spacing surrounding the settings button and status
 
 ### 0.3.1
-
 Fixed issue where the metrics were being reset to default when changing settings.
 
 ### 0.3.2
-
 Fixed issue where disconnects wasn't functioning properly.
 
 ### 0.3.3
-
 Disconnect severity coloring:
 - 0: Green
 - 1 - 9: Yellow
 - 10+: Red
 
 ### 0.3.4
-
 Similar to [0.3.3](#033), latency severity coloring:
 - <100ms: Green
 - 100 - 199ms: Yellow
 - 200+ms: Red
 
 ### 0.3.5
-
 Layout refactor and additional UI polishing.
 
 ### 0.4.0
-
 Fixed issue where the uptime/downtime was resetting when changing endpoints.
 - Phase timers are now preserved on setting change
 
 ### 0.5.0
-
 Added a third connectivity state: `Unreachable`
 - Uses a fallback probe to distinguish `Offline` (no internet connectivity) from `Unreachable` (internet is stable, target is the issue)
 
