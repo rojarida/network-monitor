@@ -59,6 +59,11 @@ QLabel#metric_value {
   color: white;
 }
 
+QLabel#metric_value[metric="server"] {
+    min-width: 140px;
+    max-width: 220px;
+}
+
 /* Base pill styling */
 QLabel#metric_value[kind="pill"] {
   qproperty-alignment: 'AlignVCenter | AlignCenter';

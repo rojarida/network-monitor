@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QTimer, Signal, Qt
+from typing import Any
+from urllib.parse import urlsplit
+
+from PySide6.QtGui import QFontMetrics, QPainter, QPalette
+from PySide6.QtCore import QTimer, Signal, Qt, QSettings
 from PySide6.QtWidgets import (
     QWidget, 
     QLabel, 
@@ -9,6 +13,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QSizePolicy,
+    QStyle,
+    QStyleOption,
 )
 
 from network_monitor.monitor.thread import MonitorThread
@@ -27,6 +33,39 @@ def format_seconds_as_hhmmss(seconds: float) -> str:
     remaining_seconds = seconds % 60
 
     return f"{hours:02d}:{minutes:02d}:{remaining_seconds:02d}"
+
+
+class ElidedLabel(QLabel):
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideMiddle,
+    ) -> None:
+        super().__init__(parent)
+        self._full_text = ""
+        self._elide_mode = elide_mode
+        self.setWordWrap(False)
+
+
+    def setText(self, text: str) -> None:
+        super().setText(text)
+        self.setToolTip(text)
+        self.update()
+
+
+    def paintEvent(self, event) -> None:
+        option = QStyleOption()
+        option.initFrom(self)
+
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, option, painter, self)
+
+        rect = self.contentsRect()
+        metrics = QFontMetrics(self.font())
+        elided = metrics.elidedText(self.text(), self._elide_mode, rect.width())
+
+        painter.setPen(self.palette().color(QPalette.ColorRole.WindowText))
+        painter.drawText(rect, int(self.alignment()), elided)
 
 
 class MonitorView(QWidget):
@@ -172,13 +211,16 @@ class MonitorView(QWidget):
         key_label = QLabel(key_text)
         key_label.setObjectName("metric_key")
 
-        value_label = QLabel("-")
+        value_label = ElidedLabel() if key_text == "Server" else QLabel("-")
         value_label.setObjectName("metric_value")
         value_label.setProperty("kind", "pill")
 
-        layout.addWidget(key_label)
-        layout.addStretch(1)
-        layout.addWidget(value_label)
+        if key_text == "Server":
+            value_label.setProperty("metric", "server")
+            value_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+
+        layout.addWidget(key_label, 1)
+        layout.addWidget(value_label, 0)
 
         return row, key_label, value_label
 
@@ -194,6 +236,69 @@ class MonitorView(QWidget):
             return
         self.monitor_state.apply(result_object)
         self.refresh_labels()
+
+
+    def _get_setting_str(self, settings: QSettings, key: str, default: str = "") -> str:
+        value: Any = settings.value(key, default)
+        if value is None:
+            return default
+        return value if isinstance(value, str) else str(value)
+
+
+    def _format_host_port(self, host: str, port: int) -> str:
+        # Bracket IPv6 when showing host:port
+        if ":" in host and not host.startswith("["):
+            return f"[{host}]:{port}"
+        return f"{host}:{port}"
+
+
+    def _compute_display_target(self, host: str, port: int) -> str:
+        settings = QSettings()
+
+        # Preferred: Use exact display saved by SettingsDialog
+        saved_display = self._get_setting_str(settings, "endpoint/display_target", "")
+        if saved_display:
+            return saved_display
+
+        # Fallback
+        method = self._get_setting_str(settings, "endpoint/method", "")
+
+        # Target method is IP
+        if method == "ip":
+            return self._format_host_port(host, port)
+
+        # Target method is hostname
+        if method == "hostname":
+            hostname = self._get_setting_str(settings, "endpoint/hostname_text", "").strip()
+            explicit_port = False
+
+            if hostname.startswith("["):
+                closing = hostname.find("]")
+                if closing != -1:
+                    remainder = hostname[closing + 1 :].strip()
+                    if remainder.startswith(":") and remainder[1:].strip().isdigit():
+                        explicit_port = True
+            else:
+                if ":" in hostname:
+                    possible_host, possible_port = hostname.rsplit(":", 1)
+                    if possible_port.isdigit():
+                        explicit_port = True
+
+            return self._format_host_port(host, port) if explicit_port else host
+
+        # Target method is URL
+        if method == "url":
+            raw = self._get_setting_str(settings, "endpoint/url_text", "").strip()
+            if raw:
+                url_text = raw if "://" in raw else f"https://{raw}"
+                parts = urlsplit(url_text)
+                explicit_port = parts.port is not None
+                return self._format_host_port(host, port) if explicit_port else host
+            
+            return host
+        
+        # Unknown method
+        return self._format_host_port(host, port)
 
 
     def refresh_labels(self) -> None:
@@ -241,7 +346,9 @@ class MonitorView(QWidget):
             self.phase_label.setText(phase_text)
 
         # Server
-        self.server_value.setText(f"{self.monitor_state.server}:{self.monitor_state.port}")
+        server_text = self._compute_display_target(self.monitor_state.server, self.monitor_state.port)
+        if self.server_value.text() != server_text:
+            self.server_value.setText(server_text)
 
         # Latency
         latency_ms = self.monitor_state.last_latency_ms
@@ -308,7 +415,7 @@ class MonitorView(QWidget):
         self.monitor_thread.start()
 
         # Update label
-        self.server_value.setText(f"{config.server}:{config.port}")
+        self.server_value.setText(self._compute_display_target(config.server, config.port))
         self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
         self._repolish(self.status_label)
