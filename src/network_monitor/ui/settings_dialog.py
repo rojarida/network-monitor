@@ -579,13 +579,11 @@ class SettingsDialog(QDialog):
             # Normalize trailing dot
             ascii_host = ascii_host.rstrip(".")
 
-            if ascii_host.lower() != "localhost" and "." not in ascii_host:
-                raise ValueError(
-                    'Please enter a fully qualified domain name (e.g., "google.com" or use IP Address).\n' 
-                    '"localhost" is allowed.')
-
             if not _HOSTNAME_RE.match(ascii_host.rstrip(".")):
-                raise ValueError("Invalid hostname.")
+                raise ValueError(
+                    'Enter a hostname (e.g., "romanjay-srv or "google.com") or an IP address.\n'
+                    '"localhost" is permitted.'
+                )
 
             display_target = host if not explicit_port else self._format_host_port(host, port)
             return NormalizedTarget(host=host, port=port, display_target=display_target)
@@ -598,21 +596,30 @@ class SettingsDialog(QDialog):
 
         # Allow scheme to be omitted (assume https)
         url_text = raw_url_text if "://" in raw_url_text else f"https://{raw_url_text}"
-        parts = urlsplit(url_text)
+
+        try:
+            parts = urlsplit(url_text)
+        except Exception as exc:
+            raise ValueError("Please enter a valid URL.") from exc
+
+        if parts.scheme not in ("http", "https"):
+            raise ValueError('Only "http" and "https" URLs are supported.')
 
         if not parts.hostname:
             raise ValueError("Please enter a valid URL (must include a host).")
 
         host = parts.hostname
-        explicit_port = parts.port is not None
+        explicit_port = False
 
-        if parts.port is not None:
-            port = int(parts.port)
+        try:
+            port = parts.port
+        except ValueError as exc:
+            raise ValueError("Invalid port in URL.") from exc
+
+        if port is None:
+            port = 80 if parts.scheme == "http" else 443
         else:
-            if parts.scheme == "http":
-                port = 80
-            else:
-                port = 443
+            explicit_port = True
 
         if not (1 <= port <= 65535):
             raise ValueError("Port out of range.")
