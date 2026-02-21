@@ -33,7 +33,7 @@ Latency is measured as the TCP connect time (when `Online`).
 ## Features
 
 - Three status states: **Online / Offline / Unreachable**
-- Configurable target endpoint:
+- Configurable target:
     - IP Addresses (IPv4/IPv6)
     - Hostnames (e.g., `google.com`)
     - URLs (e.g., `https://www.google.com/`) - Normalized to host:port
@@ -118,7 +118,7 @@ python -m network_monitor
 
 ## Roadmap
 
-- [x] Configurable endpoint (host:port) and interval/timeout
+- [x] Configurable target (host:port) and interval/timeout
 - [x] Multiple state connectivity: Online/Offline/Unreachable
 - [x] UI polish (layout and visual indicators)
 - [x] Implement target method in settings
@@ -139,7 +139,7 @@ python -m network_monitor
 Initial working GUI with TCP connectivity checks (`1.1.1.1:443`) and basic network statistics.
 
 ### 0.2.0
-Added a settings dialog to configure the monitoring endpoint:
+Added a settings dialog to configure the target:
 - Server IP
 - Port
 
@@ -186,7 +186,7 @@ Fixed issue where the uptime/downtime was resetting when changing endpoints.
 Added a third connectivity state: `Unreachable`
 - Uses a fallback probe to distinguish `Offline` (no internet connectivity) from `Unreachable` (internet is stable, target is the issue)
 
-Settings now accepts three methods of endpoints
+Settings now accepts three methods for configuring a target
 - IP Addresses (IPv4/IPv6)
 - Hostnames (`google.com`)
 - URLs (e.g., `https://www.google.com/`)
