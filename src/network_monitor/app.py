@@ -9,7 +9,7 @@ from network_monitor.ui.main_window import MainWindow
 
 
 def load_stylesheet() -> str:
-    stylesheet_path = resources.files("network_monitor.ui.styles").joinpath("app.qss")
+    stylesheet_path = resources.files("network_monitor.ui.themes").joinpath("base.qss")
     return stylesheet_path.read_text(encoding="utf-8")
 
 

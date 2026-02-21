@@ -5,13 +5,13 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/network_monitor"]
 include = [
-    "src/network_monitor/ui/styles/app.qss"
+    "src/network_monitor/ui/themes/base.qss"
 ]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "src/network_monitor",
-    "src/network_monitor/ui/styles/app.qss",
+    "src/network_monitor/ui/themes/base.qss",
     "README.md",
 ]
 
