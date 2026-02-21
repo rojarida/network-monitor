@@ -118,15 +118,20 @@ python -m network_monitor
 
 ## Roadmap
 
-- [x] Configurable target (host:port) and interval/timeout
-- [x] Multiple state connectivity: Online/Offline/Unreachable
+- [x] Configurable target (host:port) and interval/timeout (implemented in [0.2.0](#020))
+- [x] Multiple state connectivity: Online/Offline/Unreachable (implemented in [0.5.0](#050))
 - [x] UI polish (layout and visual indicators)
-- [x] Implement target method in settings
+- [x] Implement target method in settings (implemented in [0.6.0](#060))
+- [x] Tooltips for all metrics (more detailed informations) (implemented in [0.6.1](#061))
+- [ ] Click-to-copy full target (URL) from the server pill
+- [ ] Light/Dark themes
+- [ ] Taskbar Functionality
+- [ ] Ability to resize application window
 - [ ] Disconnect debounce (reduce false disconnects)
 - [ ] Start / Stop monitoring controls
 - [ ] Latency statistics (min/avg/max over last N checks)
 - [ ] History Viewing (recent checks table)
-- [ ] Tooltips for all metrics (more detailed informations)
+- [ ] Profiles (switch between configurations more easily)
 
 ## Bugs (fixed)
 
@@ -211,3 +216,16 @@ Changed
 Fixed
 - Prevented long hostnames from breaking the layout
 - Improved target validation in settings
+
+### 0.6.1
+Added
+- Shared tooltip system for the UI (`tooltips.py`) with centralized tooltip text for both the monitor metrics and the settings fields.
+- Hover tooltips across the monitor view and settins dialog for cleaner, in-application explanations.
+- Support for storing a "full target" string for URL targets so long URLs can be shown on hover.
+
+Changed
+- URL target parsing now explicitly supports only `http` and `https` schemes and handles invalid ports more safely.
+- Hostname validation updated to allow single-label hostnames (device names) that do not contain a dot.
+
+Fixed
+- Hostname targets no longer incorrectly require a `.` to be considered valid (e.g., `romanjay-srv` now works).
