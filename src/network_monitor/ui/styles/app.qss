@@ -129,25 +129,28 @@ QFrame#settings_bar {
   border: none;
 }
 
-/* ---------- BUTTONS ---------- */
+/* ----- SETTINGS BUTTON ----- */
 
 QPushButton#settings_button {
   min-width: 100px;
   min-height: 30px;
   max-height: 30px;
+
   border-radius: 15px;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 15px;
 
-  border: 2px solid palette(mid);
-  background: palette(button);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: palette(button-text);
 }
 
 QPushButton#settings_button:hover {
-  background: palette(midlight);
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 QPushButton#settings_button:pressed {
-  background: palette(light);
+  background-color: rgba(255, 255, 255, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
