@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -22,7 +23,6 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QSpinBox,
     QVBoxLayout,
-    QStackedLayout,
     QStackedWidget,
     QWidget,
     QSizePolicy,
@@ -163,7 +163,8 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.settings: QSettings = QSettings()
-        self._has_user_edited_target = False
+        self.setObjectName("settings_dialog")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         # Target method
         self.target_method_group = QButtonGroup(self)
@@ -176,13 +177,11 @@ class SettingsDialog(QDialog):
         self.target_method_group.addButton(self.hostname_method_radio_button)
         self.target_method_group.addButton(self.url_method_radio_button)
 
-        target_method_group_box = QGroupBox("")
+        target_method_group_box = QGroupBox("Method")
         target_method_layout = QVBoxLayout(target_method_group_box)
         target_method_layout.addWidget(self.ip_method_radio_button)
         target_method_layout.addWidget(self.hostname_method_radio_button)
         target_method_layout.addWidget(self.url_method_radio_button)
-
-        self.target_stack_widget = QStackedLayout()
 
         # IP Page
         self.ip_target_line_edit = QLineEdit()
@@ -218,7 +217,7 @@ class SettingsDialog(QDialog):
         self.url_target_line_edit.setPlaceholderText("e.g., https://www.google.com:443/path")
         self.url_preview_label = QLabel("")
         self.url_preview_label.setTextInteractionFlags(
-            self.url_preview_label.textInteractionFlags()
+            Qt.TextInteractionFlag.TextSelectableByMouse
         )
 
         url_page_widget = QWidget()
@@ -237,9 +236,10 @@ class SettingsDialog(QDialog):
         self.target_stack_widget.addWidget(hostname_page_widget)    # Index 1
         self.target_stack_widget.addWidget(url_page_widget)         # Index 2
 
-        self.target_container_widget = QWidget()
-        target_container_layout = QHBoxLayout(self.target_container_widget)
-        target_container_layout.setContentsMargins(0, 0, 0, 0)
+        self.target_group_box = QGroupBox("Target")
+        self.target_group_box.setObjectName("target_group_box")
+        target_container_layout = QHBoxLayout(self.target_group_box)
+        target_container_layout.setContentsMargins(12, 12, 12, 12)
         target_container_layout.setSpacing(12)
 
         target_method_group_box.setSizePolicy(
@@ -271,6 +271,7 @@ class SettingsDialog(QDialog):
             preset_values=preset_values_seconds,
             custom_tooltip_key="custom_interval",
         )
+        self.interval_group_box.setObjectName("interval_group_box")
 
         (
             self.timeout_group_box,
@@ -282,32 +283,56 @@ class SettingsDialog(QDialog):
             preset_values=preset_values_seconds,
             custom_tooltip_key="custom_timeout",
         )
+        self.timeout_group_box.setObjectName("timeout_group_box")
+
+        for box in (self.interval_group_box, self.timeout_group_box):
+            box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            box.setMinimumWidth(0)
 
         self.validation_label = QLabel("")
 
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Save
         )
+
+        save_button = self.button_box.button(QDialogButtonBox.StandardButton.Save)
+        cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+
+        if save_button is not None:
+            save_button.setObjectName("save_button")
+
+        if cancel_button is not None:
+            cancel_button.setObjectName("cancel_button")
+
         self.button_box.accepted.connect(self._save_and_close)
         self.button_box.rejected.connect(self.reject)
 
-        form_layout = QFormLayout()
-        target_method_label = QLabel("Target Method:")
-        check_interval_label = QLabel("Check Interval:")
-        timeout_label = QLabel("Timeout:")
+        main_layout = QGridLayout(self)
+        main_layout.setContentsMargins(14, 14, 14, 14)
+        main_layout.setHorizontalSpacing(12)
+        main_layout.setSpacing(12)
 
-        apply_tooltip((target_method_label,), SETTINGS_TOOLTIPS["target_method"])
-        apply_tooltip((check_interval_label,), SETTINGS_TOOLTIPS["check_interval"])
-        apply_tooltip((timeout_label,), SETTINGS_TOOLTIPS["timeout"])
+        # TODO: Implement tooltips after UI
+        # apply_tooltip((target_method_group_box,), SETTINGS_TOOLTIPS["target_method"])
+        # apply_tooltip((self.interval_group_box,), SETTINGS_TOOLTIPS["check_interval"])
+        # apply_tooltip((self.timeout_group_box,), SETTINGS_TOOLTIPS["timeout"])
 
-        form_layout.addRow(target_method_label, self.target_container_widget)
-        form_layout.addRow(check_interval_label, self.interval_group_box)
-        form_layout.addRow(timeout_label, self.timeout_group_box)
+        # Row 0: Target spans 2 columns
+        main_layout.addWidget(self.target_group_box, 0, 0, 1, 2)
 
-        main_layout = QVBoxLayout(self)
-        main_layout.addLayout(form_layout)
-        main_layout.addWidget(self.validation_label)
-        main_layout.addWidget(self.button_box)
+        # Row 1: Interval (left) and Timeout (right)
+        main_layout.addWidget(self.interval_group_box, 1, 0)
+        main_layout.addWidget(self.timeout_group_box, 1, 1)
+
+        # Make both columns share space evenly
+        main_layout.setColumnStretch(0, 1)
+        main_layout.setColumnStretch(1, 1)
+
+        # Row 2: Validation spans 2 columns
+        main_layout.addWidget(self.validation_label, 2, 0, 1, 2)
+
+        # Row 3: Cancel and Save buttons bottom right
+        main_layout.addWidget(self.button_box, 3, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignRight)
 
         # Signals
         self.ip_method_radio_button.toggled.connect(self._on_target_method_changed)
@@ -347,8 +372,7 @@ class SettingsDialog(QDialog):
         *,
         custom_tooltip_key: str | None = None,
     ) -> tuple[QGroupBox, QButtonGroup, QRadioButton, QDoubleSpinBox]:
-        # Title parameter not used, redundant at the moment
-        group_box = QGroupBox("")
+        group_box = QGroupBox(title)
         outer_layout = QVBoxLayout(group_box)
         
         button_group = QButtonGroup(self)
@@ -364,9 +388,9 @@ class SettingsDialog(QDialog):
         custom_row_layout = QHBoxLayout()
         custom_radio_button = QRadioButton("Custom: ")
         custom_spin_box = QDoubleSpinBox()
-        custom_spin_box.setRange(1, 60)
-        custom_spin_box.setSingleStep(0.5)
+        custom_spin_box.setRange(0.5, 60)
         custom_spin_box.setDecimals(1)
+        custom_spin_box.setSingleStep(0.5)
         custom_spin_box.setSuffix(" s")
         custom_spin_box.setEnabled(False)
 

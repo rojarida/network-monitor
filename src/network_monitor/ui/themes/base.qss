@@ -77,3 +77,42 @@ QPushButton#settings_button {
   border-width: 1px;
   border-style: solid;
 }
+
+/* ------ SETTINGS MENU ------- */
+QDialog#settings_dialog {
+  border-radius: 20px;
+}
+
+QDialog#settings_dialog QGroupBox {
+  border-radius: 20px;
+  padding: 4px 10px; /* Spacing for content */
+  margin-top: 15px;
+}
+
+QDialog#settings_dialog QGroupBox::title {
+  subcontrol-origin: margin;
+  subcontrol-position: top center;
+  padding: 0 20px;
+  font-weight: 700;
+}
+
+QDialog#settings_dialog QLabel {
+  font-size: 13px;
+}
+
+QDialog#settings_dialog QLineEdit,
+QDialog#settings_dialog QSpinBox,
+QDialog#settings_dialog QDoubleSpinBox {
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-height: 28px;
+}
+
+QDialog#settings_dialog QDialogButtonBox QPushButton {
+  border-radius: 8px;
+  padding: 6px 12px;
+  min-height: 30px;
+  font-weight: 600;
+  border-width: 1px;
+  border-style: solid;
+}

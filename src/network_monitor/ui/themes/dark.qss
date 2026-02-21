@@ -5,7 +5,7 @@ QWidget#monitor_view {
 }
 
 QLabel {
-  color: #888888;
+  color: #AAAAAA;
 }
 
 QLabel#metric_key {
@@ -113,4 +113,46 @@ QPushButton#settings_button:hover {
 QPushButton#settings_button:pressed {
   background-color: #474747;
   border: #353535;
+}
+
+/* ------ SETTINGS MENU ------- */
+
+QDialog#settings_dialog {
+  background-color: #111111;
+}
+
+QDialog#settings_dialog QGroupBox {
+  background-color: #202020;
+  border-color: #252525;
+}
+
+QDialog#settings_dialog QGroupBox::title {
+  color: #DDDDDD;
+  background-color: #0B0D10;
+}
+
+QDialog#settings_dialog QLineEdit,
+QDialog#settings_dialog QSpinBox,
+QDialog#settings_dialog QDoubleSpinBox {
+  background-color: #141823;
+  border: 1px solid #1E2433;
+  color: #E8ECF6;
+}
+
+QDialog#settings_dialog QLineEdit:focus,
+QDialog#settings_dialog QSpinBox:focus,
+QDialog#settings_dialog QDoubleSpinBox:focus {
+  border-color: #2F81F7;
+}
+
+QDialog#settings_dialog QDialogButtonBox QPushButton {
+  background-color: #141823;
+  border-color: #1E2433;
+  color: #E8ECF6;
+}
+
+QDialog#settings_dialog QPushButton#save_button {
+  background-color: #2F81F7;
+  border-color: #2F81F7;
+  color: #0B0D10;
 }
