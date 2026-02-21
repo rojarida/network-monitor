@@ -1,12 +1,7 @@
 /* ----- MONITOR VIEW -------- */
 
-QWidget#monitor_view {
-  background: palette(window);
-}
-
 QLabel {
   padding: 2px 0px;
-  color: palette(text);
 }
 
 QWidget#stats_container {
@@ -27,38 +22,16 @@ QLabel#status_label {
   font-size: 30px;
 }
 
-QLabel#status_label[status="online"] {
-  background-color: #228B22; /* Forest Green */
-  color: white;
-}
-
-QLabel#status_label[status="offline"] {
-  background-color: #C41E3A; /* Cardinal Red */
-  color: white;
-}
-
-QLabel#status_label[status="unreachable"] {
-  background: #DAA520; /* Goldenrod */
-  color: white;
-}
-
-QLabel#status_label[status="unknown"] {
-  background-color: palette(mid);
-  color: palette(button-text);
-}
-
 /* --------- METRICS --------- */
 
 QLabel#metric_key {
   font-weight: 500;
   font-size: 14px;
-  color: palette(text);
 }
 
 QLabel#metric_value {
   font-weight: 700;
   font-size: 17px;
-  color: white;
 }
 
 QLabel#metric_value[metric="server"] {
@@ -74,44 +47,7 @@ QLabel#metric_value[kind="pill"] {
   min-width: 10px;
   padding: 0px 12px;
   border-radius: 15px;
-  background: #228B22; /* Forest Green */
 }
-
-/* When status is DOWN, change pills to red */
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"] {
-  background: #C41E3A; /* Cardinal Red */
-}
-
-/* When status is UNREACHABLE, change pills to yellow */
-QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"] {
-  background: #DAA520; /* Goldenrod */
-}
-
-/* Keep server pill blue */
-QWidget#monitor_view[status="online"] QLabel#metric_value[kind="pill"][metric="server"],
-QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"][metric="server"],
-QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"][metric="server"] {
-  background: #0F52BA; /* Sapphire Blue */
-}
-
-/* Latency severity */
-QLabel#metric_value[kind="pill"][metric="latency"][level="warn"] {
-  background: #DAA520; /* Goldenrod */
-}
-
-QLabel#metric_value[kind="pill"][metric="latency"][level="bad"] {
-  background: #C41E3A; /* Cardinal Red */
-}
-
-/* Disconnect severity */
-QLabel#metric_value[kind="pill"][metric="disconnects"][level="warn"] {
-  background: #DAA520; /* Goldenrod */
-}
-
-QLabel#metric_value[kind="pill"][metric="disconnects"][level="bad"] {
-  background: #C41E3A; /* Cardinal Red */
-}
-
 
 /* ------SEPARATOR & BOTTOM BAR ------- */
 
@@ -121,11 +57,9 @@ QFrame#separator_bottom {
   border: none;
   min-height: 2px;
   max-height: 2px;
-  background: palette(light);
 }
 
 QFrame#settings_bar {
-  background: palette(base);
   border: none;
 }
 
@@ -140,17 +74,6 @@ QPushButton#settings_button {
   font-weight: 600;
   font-size: 15px;
 
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: palette(button-text);
-}
-
-QPushButton#settings_button:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-QPushButton#settings_button:pressed {
-  background-color: rgba(255, 255, 255, 0.20);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-width: 1px;
+  border-style: solid;
 }
