@@ -63,29 +63,34 @@ Latency is measured as the TCP connect time (when `Online`).
 ```text
 .
 ├── assets
+│   ├── icons
+│   │   └── network-monitor_256x256.png
 │   └── screenshots
 │       ├── offline.png
 │       ├── online.png
 │       └── unreachable.png
+├── NetworkMonitor.spec
 ├── pyproject.toml
 ├── README.md
-└── src
-    └── network_monitor
-        ├── app.py
-        ├── __init__.py
-        ├── __main__.py
-        ├── monitor
-        │   ├── __init__.py
-        │   └── thread.py
-        ├── state.py
-        └── ui
-            ├── __init__.py
-            ├── main_window.py
-            ├── monitor_view.py
-            ├── settings_dialog.py
-            └── styles
-                ├── app.qss
-                └── __init__.py
+├── src
+│   └── network_monitor
+│       ├── app.py
+│       ├── __init__.py
+│       ├── __main__.py
+│       ├── monitor
+│       │   ├── __init__.py
+│       │   └── thread.py
+│       ├── state.py
+│       └── ui
+│           ├── __init__.py
+│           ├── main_window.py
+│           ├── monitor_view.py
+│           ├── settings_dialog.py
+│           ├── styles
+│           │   ├── app.qss
+│           │   └── __init__.py
+│           └── tooltips.py
+└── uv.lock
 ```
 
 ## Setup
