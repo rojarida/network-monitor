@@ -20,6 +20,11 @@ from PySide6.QtWidgets import (
 from network_monitor.monitor.thread import MonitorThread
 from network_monitor.state import MonitorState, CheckResult
 from network_monitor.ui.settings_dialog import MonitorConfig
+from network_monitor.ui.tooltips import (
+    METRIC_TOOLTIPS,
+    apply_tooltip,
+    status_value_tooltip
+)
 
 
 def format_seconds_as_hhmmss(seconds: float) -> str:
@@ -103,6 +108,9 @@ class MonitorView(QWidget):
         self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
 
+        server_row, _server_label, self.server_value = self._make_metric_row("Server")
+        self.server_value.setProperty("metric", "server")
+
         phase_row, self.phase_label, self.phase_value = self._make_metric_row("Current phase")
         self.phase_value.setProperty("metric", "phase")
 
@@ -117,9 +125,6 @@ class MonitorView(QWidget):
 
         downtime_row, _downtime_label, self.total_downtime_value = self._make_metric_row("Total downtime")
         self.total_downtime_value.setProperty("metric", "downtime")
-
-        server_row, _server_label, self.server_value = self._make_metric_row("Server")
-        self.server_value.setProperty("metric", "server")
 
         stats_layout.addWidget(status_row)
         stats_layout.addWidget(self._make_separator("separator_top"))
@@ -183,6 +188,10 @@ class MonitorView(QWidget):
         return line
 
 
+    def _tooltip_key(self, label_text: str) -> str:
+        return label_text.strip().casefold().replace(" ", "_")
+
+
     def _make_metric_row(
         self,
         key_text: str,
@@ -217,6 +226,10 @@ class MonitorView(QWidget):
             layout.addWidget(key_label, 1)
             layout.addWidget(value_label, 0)
 
+        tooltip_key = self._tooltip_key(key_text)
+        tooltip_text = METRIC_TOOLTIPS.get(tooltip_key, "")
+        apply_tooltip((key_label,), tooltip_text)
+
         return row, key_label, value_label
 
 
@@ -247,11 +260,23 @@ class MonitorView(QWidget):
         return f"{host}:{port}"
 
 
+    def _compute_full_target_tooltip(self) -> str:
+        settings = QSettings()
+        full_target = self._get_setting_str(settings, "endpoint/full_target", "").strip()
+        if full_target:
+            return full_target
+
+        # Fallback
+        host = self.monitor_state.server
+        port = self.monitor_state.port
+        return self._compute_display_target(host, port)
+
+
     def _compute_display_target(self, host: str, port: int) -> str:
         settings = QSettings()
 
         # Preferred: Use exact display saved by SettingsDialog
-        saved_display = self._get_setting_str(settings, "endpoint/display_target", "")
+        saved_display = self._get_setting_str(settings, "endpoint/display_target", "").strip()
         if saved_display:
             return saved_display
 
@@ -304,17 +329,16 @@ class MonitorView(QWidget):
             new_status = "unknown"
         elif last_status == "online":
             self.status_label.setText("Online")
-            self.status_label.setToolTip("Internet is stable")
             new_status = "online"
         elif last_status == "offline":
             self.status_label.setText("Offline")
-            self.status_label.setToolTip("No internet access")
             new_status = "offline"
         else:
             # Unreachable
             self.status_label.setText("Unreachable")
-            self.status_label.setToolTip("Server unreachable (internet is stable)")
             new_status = "unreachable"
+
+        self.status_label.setToolTip(status_value_tooltip(last_status))
 
         # Root status 
         if self.property("status") != new_status:
@@ -344,6 +368,13 @@ class MonitorView(QWidget):
         server_text = self._compute_display_target(self.monitor_state.server, self.monitor_state.port)
         if self.server_value.text() != server_text:
             self.server_value.setText(server_text)
+
+        full_target = self._compute_full_target_tooltip()
+        tooltip_text = f"{full_target}\n\n Click to copy full URL"
+
+        # Update tooltip
+        if self.server_value.toolTip() != tooltip_text:
+            self.server_value.setToolTip(tooltip_text)
 
         # Latency
         latency_ms = self.monitor_state.last_latency_ms

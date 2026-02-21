@@ -28,6 +28,8 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+from network_monitor.ui.tooltips import SETTINGS_TOOLTIPS, apply_tooltip
+
 
 # Regex for handling URLs
 _HOSTNAME_RE = re.compile(
@@ -41,6 +43,7 @@ class NormalizedTarget:
     host: str
     port: int
     display_target: str
+    full_target: str | None = None
 
 
 @dataclass(frozen=True)
@@ -190,8 +193,14 @@ class SettingsDialog(QDialog):
 
         ip_page_widget = QWidget()
         ip_page_form_layout = QFormLayout(ip_page_widget)
-        ip_page_form_layout.addRow("IP:", self.ip_target_line_edit)
-        ip_page_form_layout.addRow("Port:", self.ip_port_spin_box)
+        ip_address_label = QLabel("IP:")
+        ip_port_label = QLabel("Port:")
+
+        apply_tooltip((ip_address_label,), SETTINGS_TOOLTIPS["ip_input"])
+        apply_tooltip((ip_port_label,), SETTINGS_TOOLTIPS["ip_port"])
+
+        ip_page_form_layout.addRow(ip_address_label, self.ip_target_line_edit)
+        ip_page_form_layout.addRow(ip_port_label, self.ip_port_spin_box)
 
         # Hostname Page
         self.hostname_target_line_edit = QLineEdit()
@@ -199,7 +208,10 @@ class SettingsDialog(QDialog):
 
         hostname_page_widget = QWidget()
         hostname_page_form_layout = QFormLayout(hostname_page_widget)
-        hostname_page_form_layout.addRow("Hostname:", self.hostname_target_line_edit)
+        hostname_label = QLabel("Hostname:")
+
+        apply_tooltip((hostname_label,), SETTINGS_TOOLTIPS["hostname_input"])
+        hostname_page_form_layout.addRow(hostname_label, self.hostname_target_line_edit)
 
         # URL Page
         self.url_target_line_edit = QLineEdit()
@@ -212,7 +224,11 @@ class SettingsDialog(QDialog):
         url_page_widget = QWidget()
         url_page_layout = QVBoxLayout(url_page_widget)
         url_page_form_layout = QFormLayout()
-        url_page_form_layout.addRow("URL:", self.url_target_line_edit)
+        url_label = QLabel("URL:")
+        
+        apply_tooltip((url_label,), SETTINGS_TOOLTIPS["url_input"])
+        url_page_form_layout.addRow(url_label, self.url_target_line_edit)
+
         url_page_layout.addLayout(url_page_form_layout)
         url_page_layout.addWidget(self.url_preview_label)
 
@@ -253,6 +269,7 @@ class SettingsDialog(QDialog):
         ) = self._build_seconds_radio_group(
             title="Check Interval",
             preset_values=preset_values_seconds,
+            custom_tooltip_key="custom_interval",
         )
 
         (
@@ -263,6 +280,7 @@ class SettingsDialog(QDialog):
         ) = self._build_seconds_radio_group(
             title="Timeout",
             preset_values=preset_values_seconds,
+            custom_tooltip_key="custom_timeout",
         )
 
         self.validation_label = QLabel("")
@@ -274,9 +292,17 @@ class SettingsDialog(QDialog):
         self.button_box.rejected.connect(self.reject)
 
         form_layout = QFormLayout()
-        form_layout.addRow("Target Method: ", self.target_container_widget)
-        form_layout.addRow("Check Interval: ", self.interval_group_box)
-        form_layout.addRow("Timeout: ", self.timeout_group_box)
+        target_method_label = QLabel("Target Method:")
+        check_interval_label = QLabel("Check Interval:")
+        timeout_label = QLabel("Timeout:")
+
+        apply_tooltip((target_method_label,), SETTINGS_TOOLTIPS["target_method"])
+        apply_tooltip((check_interval_label,), SETTINGS_TOOLTIPS["check_interval"])
+        apply_tooltip((timeout_label,), SETTINGS_TOOLTIPS["timeout"])
+
+        form_layout.addRow(target_method_label, self.target_container_widget)
+        form_layout.addRow(check_interval_label, self.interval_group_box)
+        form_layout.addRow(timeout_label, self.timeout_group_box)
 
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(form_layout)
@@ -318,6 +344,8 @@ class SettingsDialog(QDialog):
         self,
         title: str,
         preset_values: list[float],
+        *,
+        custom_tooltip_key: str | None = None,
     ) -> tuple[QGroupBox, QButtonGroup, QRadioButton, QDoubleSpinBox]:
         # Title parameter not used, redundant at the moment
         group_box = QGroupBox("")
@@ -341,6 +369,11 @@ class SettingsDialog(QDialog):
         custom_spin_box.setDecimals(1)
         custom_spin_box.setSuffix(" s")
         custom_spin_box.setEnabled(False)
+
+        if custom_tooltip_key:
+            tooltip_text = SETTINGS_TOOLTIPS.get(custom_tooltip_key, "")
+            apply_tooltip((custom_radio_button,), tooltip_text)
+            apply_tooltip((custom_spin_box,), tooltip_text)
 
         button_group.addButton(custom_radio_button)
 
@@ -520,8 +553,8 @@ class SettingsDialog(QDialog):
             return
 
         # For URL, show the normalized connection target
-        if self._current_method == self.METHOD_URL:
-            self.url_preview_label.setText(f"Will connect to: {host}:{port}")
+        if self._current_method() == self.METHOD_URL:
+            self.url_preview_label.setText(f"Establishing connection to: {host}:{port}")
 
         save_button.setEnabled(True)
 
@@ -625,7 +658,7 @@ class SettingsDialog(QDialog):
             raise ValueError("Port out of range.")
 
         display_target = host if not explicit_port else self._format_host_port(host, port)
-        return NormalizedTarget(host=host, port=port, display_target=display_target)
+        return NormalizedTarget(host=host, port=port, display_target=display_target, full_target=url_text)
 
 
     def _looks_like_url(self, text: str) -> bool:
@@ -750,12 +783,17 @@ class SettingsDialog(QDialog):
 
         # Persist raw UI state
         method = self._current_method()
+        full_target = normalized.full_target
+        if method != self.METHOD_URL:
+            full_target = None
+
         self.settings.setValue("endpoint/method", method)
         self.settings.setValue("endpoint/ip_text", self.ip_target_line_edit.text().strip())
         self.settings.setValue("endpoint/ip_port", self.ip_port_spin_box.value())
         self.settings.setValue("endpoint/hostname_text", self.hostname_target_line_edit.text().strip())
         self.settings.setValue("endpoint/url_text", self.url_target_line_edit.text().strip())
         self.settings.setValue("endpoint/display_target", normalized.display_target)
+        self.settings.setValue("endpoint/full_target", full_target)
 
         config = MonitorConfig(
             server=normalized.host,
