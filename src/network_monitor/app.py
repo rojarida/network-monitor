@@ -6,18 +6,30 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 from network_monitor.ui.main_window import MainWindow
+from network_monitor.ui.themes.theme_manager import ThemeManager
 
 
-def load_stylesheet() -> str:
-    stylesheet_path = resources.files("network_monitor.ui.themes").joinpath("base.qss")
-    return stylesheet_path.read_text(encoding="utf-8")
+def load_stylesheet(theme: str | None = None) -> str:
+    themes = resources.files("network_monitor.ui.themes")
+    base = themes.joinpath("base.qss").read_text(encoding="utf-8")
+
+    if not theme:
+        return base
+
+    overlay = themes.joinpath(f"{theme}.qss").read_text(encoding="utf-8")
+    return f"{base}\n\n /* ---- Theme: {theme} ---- */\n\n{overlay}\n"
 
 
 def main() -> int:
     application = QApplication(sys.argv)
     QCoreApplication.setOrganizationName("RomanJay")
     QCoreApplication.setApplicationName("Network Monitor")
-    application.setStyleSheet(load_stylesheet())
+
+    theme_manager = ThemeManager(application)
+    theme_manager.apply_theme("dark")
+    theme_manager.enable_live_reload()
+
+    # application.setStyleSheet(load_stylesheet())
 
     window = MainWindow()
     window.show()
