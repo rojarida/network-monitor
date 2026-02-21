@@ -44,7 +44,7 @@ QLabel#metric_value[kind="pill"] {
   qproperty-alignment: 'AlignVCenter | AlignCenter';
   max-height: 30px;
   min-height: 30px;
-  min-width: 10px;
+  min-width: 20px;
   padding: 0px 12px;
   border-radius: 15px;
 }
