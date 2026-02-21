@@ -108,7 +108,7 @@ uv pip install -e .
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip
-pip install -e .
+python3 -m pip install -e .
 ```
 
 ## Run
