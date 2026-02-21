@@ -105,8 +105,9 @@ uv pip install -e .
 ### Option B: venv & pip
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
+python3 -m pip install --upgrade pip
 pip install -e .
 ```
 
