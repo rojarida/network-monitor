@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from PySide6.QtCore import QSettings, Qt
 from PySide6.QtWidgets import (
+    QFrame,
     QButtonGroup,
     QDialog,
     QDialogButtonBox,
@@ -161,8 +162,9 @@ class SettingsDialog(QDialog):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Settings")
         self.settings: QSettings = QSettings()
+        self.setWindowTitle("Settings")
+        self.setFixedSize(600, 450)
         self.setObjectName("settings_dialog")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
@@ -179,6 +181,9 @@ class SettingsDialog(QDialog):
 
         target_method_group_box = QGroupBox("Method")
         target_method_layout = QVBoxLayout(target_method_group_box)
+        target_method_group_box.setObjectName("method_box")
+        target_method_group_box.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
         target_method_layout.addWidget(self.ip_method_radio_button)
         target_method_layout.addWidget(self.hostname_method_radio_button)
         target_method_layout.addWidget(self.url_method_radio_button)
@@ -186,12 +191,16 @@ class SettingsDialog(QDialog):
         # IP Page
         self.ip_target_line_edit = QLineEdit()
         self.ip_target_line_edit.setPlaceholderText("e.g., 1.1.1.1 or 2606:4700:4700::1111")
+        self.ip_target_line_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.ip_port_spin_box = QSpinBox()
         self.ip_port_spin_box.setRange(1, 65535)
         self.ip_port_spin_box.setValue(443)
+        self.ip_port_spin_box.setMaximumWidth(80)
 
         ip_page_widget = QWidget()
         ip_page_form_layout = QFormLayout(ip_page_widget)
+        ip_page_form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        ip_page_form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         ip_address_label = QLabel("IP:")
         ip_port_label = QLabel("Port:")
 
@@ -204,9 +213,14 @@ class SettingsDialog(QDialog):
         # Hostname Page
         self.hostname_target_line_edit = QLineEdit()
         self.hostname_target_line_edit.setPlaceholderText("e.g., google.com (optional: :443)")
+        self.hostname_target_line_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         hostname_page_widget = QWidget()
         hostname_page_form_layout = QFormLayout(hostname_page_widget)
+        hostname_page_form_layout.setLabelAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
+        hostname_page_form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         hostname_label = QLabel("Hostname:")
 
         apply_tooltip((hostname_label,), SETTINGS_TOOLTIPS["hostname_input"])
@@ -215,6 +229,7 @@ class SettingsDialog(QDialog):
         # URL Page
         self.url_target_line_edit = QLineEdit()
         self.url_target_line_edit.setPlaceholderText("e.g., https://www.google.com:443/path")
+        self.url_target_line_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.url_preview_label = QLabel("")
         self.url_preview_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
@@ -223,6 +238,10 @@ class SettingsDialog(QDialog):
         url_page_widget = QWidget()
         url_page_layout = QVBoxLayout(url_page_widget)
         url_page_form_layout = QFormLayout()
+        url_page_form_layout.setLabelAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
+        url_page_form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         url_label = QLabel("URL:")
         
         apply_tooltip((url_label,), SETTINGS_TOOLTIPS["url_input"])
@@ -236,58 +255,60 @@ class SettingsDialog(QDialog):
         self.target_stack_widget.addWidget(hostname_page_widget)    # Index 1
         self.target_stack_widget.addWidget(url_page_widget)         # Index 2
 
-        self.target_group_box = QGroupBox("Target")
-        self.target_group_box.setObjectName("target_group_box")
-        target_container_layout = QHBoxLayout(self.target_group_box)
-        target_container_layout.setContentsMargins(12, 12, 12, 12)
-        target_container_layout.setSpacing(12)
+        target_body = QWidget()
+        target_body_layout = QHBoxLayout(target_body)
+        target_body_layout.setContentsMargins(0, 0, 0, 0)
+        target_body_layout.setSpacing(16)
 
         target_method_group_box.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred
         )
-        target_container_layout.addWidget(target_method_group_box, 0, Qt.AlignmentFlag.AlignTop)
+        target_body_layout.addWidget(
+            target_method_group_box, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+        )
 
         # Let input fields fill the space centered vertically/horizontally
         inputs_wrapper = QWidget()
         inputs_wrapper_layout = QVBoxLayout(inputs_wrapper)
         inputs_wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        inputs_wrapper_layout.setSpacing(0)
 
         inputs_wrapper_layout.addStretch(1)
-        inputs_wrapper_layout.addWidget(self.target_stack_widget)
+        inputs_wrapper_layout.addWidget(self.target_stack_widget, 0, Qt.AlignmentFlag.AlignVCenter)
         inputs_wrapper_layout.addStretch(1)
 
-        target_container_layout.addWidget(inputs_wrapper, 1)
+        inputs_wrapper.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+        target_body_layout.addWidget(inputs_wrapper, 1, Qt.AlignmentFlag.AlignVCenter)
+        self.target_section = self._make_titled_card(
+            "Target", target_body, "target_card", center_horizontally=False
+        )
 
         # Radio groups for interval/timeout (presets and custom)
         preset_values_seconds = [0.5, 1.0, 2.0, 5.0]
 
         (
-            self.interval_group_box,
+            interval_body,
             self.interval_button_group,
             self.interval_custom_radio_button,
             self.interval_custom_spin_box,
         ) = self._build_seconds_radio_group(
-            title="Check Interval",
             preset_values=preset_values_seconds,
             custom_tooltip_key="custom_interval",
         )
-        self.interval_group_box.setObjectName("interval_group_box")
 
         (
-            self.timeout_group_box,
+            timeout_body,
             self.timeout_button_group,
             self.timeout_custom_radio_button,
             self.timeout_custom_spin_box,
         ) = self._build_seconds_radio_group(
-            title="Timeout",
             preset_values=preset_values_seconds,
             custom_tooltip_key="custom_timeout",
         )
-        self.timeout_group_box.setObjectName("timeout_group_box")
 
-        for box in (self.interval_group_box, self.timeout_group_box):
-            box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-            box.setMinimumWidth(0)
+        self.interval_section = self._make_titled_card("Check Interval", interval_body, "interval_card")
+        self.timeout_section = self._make_titled_card("Timeout", timeout_body, "timeout_card")
 
         self.validation_label = QLabel("")
 
@@ -318,11 +339,11 @@ class SettingsDialog(QDialog):
         # apply_tooltip((self.timeout_group_box,), SETTINGS_TOOLTIPS["timeout"])
 
         # Row 0: Target spans 2 columns
-        main_layout.addWidget(self.target_group_box, 0, 0, 1, 2)
+        main_layout.addWidget(self.target_section, 0, 0, 1, 2)
 
         # Row 1: Interval (left) and Timeout (right)
-        main_layout.addWidget(self.interval_group_box, 1, 0)
-        main_layout.addWidget(self.timeout_group_box, 1, 1)
+        main_layout.addWidget(self.interval_section, 1, 0)
+        main_layout.addWidget(self.timeout_section, 1, 1)
 
         # Make both columns share space evenly
         main_layout.setColumnStretch(0, 1)
@@ -345,7 +366,6 @@ class SettingsDialog(QDialog):
 
         self.ip_port_spin_box.valueChanged.connect(self._update_validation_ui)
 
-        self.setFixedSize(600, 500)
         self._load_settings()
         self._on_target_method_changed()
         self._update_validation_ui()
@@ -365,34 +385,119 @@ class SettingsDialog(QDialog):
             self.url_target_line_edit.setText("https://google.com")
 
 
+    def _make_titled_card(
+        self,
+        title_text: str,
+        body_widget: QWidget,
+        card_name: str,
+        *,
+        center_horizontally: bool = True,
+    ) -> QWidget:
+        section = QWidget()
+        section.setObjectName(f"{card_name}_section")
+
+        section_layout = QVBoxLayout(section)
+        section_layout.setContentsMargins(0, 0, 0, 0)
+        section_layout.setSpacing(8)
+
+        title_label = QLabel(title_text)
+        title_label.setProperty("role", "section_heading")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+        section_card = QFrame()
+        section_card.setObjectName(card_name)
+        section_card.setProperty("role", "section_card")
+        section_card.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        section_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+        card_layout = QVBoxLayout(section_card)
+        card_layout.setContentsMargins(12, 12, 12, 12)
+        card_layout.setSpacing(12)
+
+        center_wrapper = QWidget()
+        center_layout = QVBoxLayout(center_wrapper)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(0)
+
+        center_layout.addStretch(1)
+        if center_horizontally:
+            center_layout.addWidget(body_widget, 0, Qt.AlignmentFlag.AlignHCenter)
+        else:
+            center_layout.addWidget(body_widget)
+        center_layout.addStretch(1)
+
+        card_layout.addWidget(center_wrapper)
+        section_layout.addWidget(title_label)
+        section_layout.addWidget(section_card)
+
+        return section
+
+
     def _build_seconds_radio_group(
         self,
-        title: str,
         preset_values: list[float],
         *,
         custom_tooltip_key: str | None = None,
-    ) -> tuple[QGroupBox, QButtonGroup, QRadioButton, QDoubleSpinBox]:
-        group_box = QGroupBox(title)
-        outer_layout = QVBoxLayout(group_box)
+    ) -> tuple[QWidget, QButtonGroup, QRadioButton, QDoubleSpinBox]:
+        body = QWidget()
+
+        # Vertical root. Presets on the top, custom on the bottom
+        root_layout = QVBoxLayout(body)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(10)
         
         button_group = QButtonGroup(self)
 
-        # Preset radio buttons
+        # Top row: Preset radio buttons
+        presets_widget = QWidget()
+        presets_widget.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        presets_layout = QHBoxLayout(presets_widget)
+        presets_layout.setContentsMargins(0, 0, 0, 0)
+        presets_layout.setSpacing(10)
+
+        presets_center = QWidget()
+        presets_center_layout = QHBoxLayout(presets_center)
+        presets_center_layout.setContentsMargins(0, 0, 0, 0)
+        presets_center_layout.setSpacing(0)
+        presets_center_layout.addStretch(1)
+        presets_center_layout.addWidget(presets_widget)
+        presets_center_layout.addStretch(1)
+
         for seconds_value in preset_values:
             preset_radio_button = QRadioButton(f"{seconds_value:g} s")
             preset_radio_button.setProperty("seconds_value", seconds_value)
             button_group.addButton(preset_radio_button)
-            outer_layout.addWidget(preset_radio_button)
+            presets_layout.addWidget(preset_radio_button)
 
-        # Custom option
-        custom_row_layout = QHBoxLayout()
-        custom_radio_button = QRadioButton("Custom: ")
+
+        # Bottom row: Custom radio and spinbox centered vertically
+        custom_widget = QWidget()
+        custom_widget.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+        custom_layout = QHBoxLayout(custom_widget)
+        custom_layout.setContentsMargins(0, 0, 0, 0)
+        custom_layout.setSpacing(0)
+
+        custom_row = QWidget()
+        custom_row_layout = QHBoxLayout(custom_row)
+        custom_row_layout.setContentsMargins(0, 0, 0, 0)
+        custom_row_layout.setSpacing(10)
+
+        custom_radio_button = QRadioButton("Custom:")
         custom_spin_box = QDoubleSpinBox()
         custom_spin_box.setRange(0.5, 60)
         custom_spin_box.setDecimals(1)
         custom_spin_box.setSingleStep(0.5)
         custom_spin_box.setSuffix(" s")
         custom_spin_box.setEnabled(False)
+        custom_spin_box.setMaximumWidth(70)
+
+        custom_center = QWidget()
+        custom_center_layout = QHBoxLayout(custom_center)
+        custom_center_layout.setContentsMargins(0, 0, 0, 0)
+        custom_center_layout.setSpacing(0)
+        custom_center_layout.addStretch(1)
+        custom_center_layout.addWidget(custom_widget)
+        custom_center_layout.addStretch(1)
 
         if custom_tooltip_key:
             tooltip_text = SETTINGS_TOOLTIPS.get(custom_tooltip_key, "")
@@ -403,8 +508,13 @@ class SettingsDialog(QDialog):
 
         custom_row_layout.addWidget(custom_radio_button)
         custom_row_layout.addWidget(custom_spin_box)
-        custom_row_layout.addStretch(1)
-        outer_layout.addLayout(custom_row_layout)
+
+        custom_layout.addWidget(custom_row, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        # Combine the two columns
+        root_layout.addWidget(presets_center)
+        root_layout.addWidget(custom_center)
+        root_layout.addStretch(1)
 
         def on_button_clicked() -> None:
             custom_spin_box.setEnabled(custom_radio_button.isChecked())
@@ -423,7 +533,7 @@ class SettingsDialog(QDialog):
         if not default_set and button_group.buttons():
             button_group.buttons()[0].setChecked(True)
 
-        return group_box, button_group, custom_radio_button, custom_spin_box
+        return body, button_group, custom_radio_button, custom_spin_box
 
 
     def _selected_seconds(
