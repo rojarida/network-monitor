@@ -81,6 +81,7 @@ class MonitorView(QWidget):
         super().__init__(parent)
 
         self.setObjectName("monitor_view")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         startup_config = MonitorConfig.load()
         self.monitor_state = MonitorState(

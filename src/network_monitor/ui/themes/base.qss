@@ -1,0 +1,118 @@
+/* ----- MONITOR VIEW -------- */
+
+QLabel {
+  padding: 2px 0px;
+}
+
+QWidget#stats_container {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+/* ------ STATUS ------ */
+
+QLabel#status_label {
+  qproperty-alignment: 'AlignVCenter | AlignCenter';
+  min-height: 50px;
+  max-height: 50px;
+  border-radius: 25px;
+  min-width: 20px;
+  padding: 0px 18px;
+  font-weight: 700;
+  font-size: 30px;
+}
+
+/* --------- METRICS --------- */
+
+QLabel#metric_key {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+QLabel#metric_value {
+  font-weight: 700;
+  font-size: 17px;
+}
+
+QLabel#metric_value[metric="server"] {
+    min-width: 140px;
+    max-width: 220px;
+}
+
+/* Base pill styling */
+QLabel#metric_value[kind="pill"] {
+  qproperty-alignment: 'AlignVCenter | AlignCenter';
+  max-height: 30px;
+  min-height: 30px;
+  min-width: 20px;
+  padding: 0px 12px;
+  border-radius: 15px;
+}
+
+/* ------SEPARATOR & BOTTOM BAR ------- */
+
+QFrame#separator_top,
+QFrame#separator_middle,
+QFrame#separator_bottom {
+  border: none;
+  min-height: 2px;
+  max-height: 2px;
+}
+
+QFrame#settings_bar {
+  border: none;
+}
+
+/* ----- SETTINGS BUTTON ----- */
+
+QPushButton#settings_button {
+  min-width: 100px;
+  min-height: 30px;
+  max-height: 30px;
+
+  border-radius: 15px;
+  font-weight: 600;
+  font-size: 15px;
+
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* ------ SETTINGS MENU ------- */
+QDialog#settings_dialog {
+  border-radius: 20px;
+}
+
+QDialog#settings_dialog QGroupBox {
+  border-radius: 20px;
+  padding: 4px 10px; /* Spacing for content */
+  margin-top: 15px;
+}
+
+QDialog#settings_dialog QGroupBox::title {
+  subcontrol-origin: margin;
+  subcontrol-position: top center;
+  padding: 0 20px;
+  font-weight: 700;
+}
+
+QDialog#settings_dialog QLabel {
+  font-size: 13px;
+}
+
+QDialog#settings_dialog QLineEdit,
+QDialog#settings_dialog QSpinBox,
+QDialog#settings_dialog QDoubleSpinBox {
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-height: 28px;
+}
+
+QDialog#settings_dialog QDialogButtonBox QPushButton {
+  border-radius: 8px;
+  padding: 6px 12px;
+  min-height: 30px;
+  font-weight: 600;
+  border-width: 1px;
+  border-style: solid;
+}
