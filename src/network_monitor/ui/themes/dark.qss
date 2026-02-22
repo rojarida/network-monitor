@@ -4,7 +4,7 @@ QWidget#monitor_view {
   background-color: #111111;
 }
 
-QLabel {
+QWidget#monitor_view QLabel {
   color: #AAAAAA;
 }
 
@@ -121,40 +121,111 @@ QDialog#settings_dialog {
   background-color: #111111;
 }
 
-/* Main headings */
-QDialog#settings_dialog QLabel[role="section_heading"] {
-  color: #AAAAAA;
+QDialog#settings_dialog QLabel{
+  color: #111111;
 }
 
-/* Main sections */
+/* Headings */
+QDialog#settings_dialog QLabel[role="section_heading"] {
+  color: #BBBBBB;
+}
+
+QDialog#settings_dialog QLabel[role="method_heading"] {
+  color: #DDDDDD;
+}
+
+/* Field labels (IP:, Port:, Hostname:, URL:) */
+QDialog#settings_dialog QLabel[role="field_label"] {
+  color: #BBBBBB;
+}
+
+/* Preview line ("Checking target: ...") */
+QDialog#settings_dialog QLabel#ip_preview_label,
+QDialog#settings_dialog QLabel#hostname_preview_label,
+QDialog#settings_dialog QLabel#url_preview_label {
+  color: #BBBBBB;
+}
+
+/* Section cards */
 QDialog#settings_dialog QFrame[role="section_card"] {
   background-color: #202020;
   border-color: #353535;
-  border-radius: 20px;
 }
 
-QDialog#settings_dialog QWidget[role="section_body"] {
-  border: #FFFFFF;
-  border-radius: 30px;
-}
-
-/* “Method” Mini box */
+/* Method mini-card */
 QDialog#settings_dialog QGroupBox#method_box {
   background-color: #292929;
-  border-color: #353535;
-  border-radius: 20px;
+  border-color: #414141;
 }
 
-QDialog#settings_dialog QGroupBox#method_box::title {
-  color: #AAAAAA;
-  border: 1px solid white;
-}
-
-/* Input fields */
+/* Inputs */
 QDialog#settings_dialog QLineEdit,
 QDialog#settings_dialog QSpinBox,
-QDialog#settings_dialog QDoubleSpinBox,
-QDialog#settings_dialog QComboBox {
-  border: 1px solid rgba(255, 255, 255, 0.18);
+QDialog#settings_dialog QDoubleSpinBox {
+  color: #DDDDDD;
+  border-color: #555555;
+  background-color: #292929;
+}
+
+QDialog#settings_dialog QLineEdit:focus,
+QDialog#settings_dialog QSpinBox:focus,
+QDialog#settings_dialog QDoubleSpinBox:focus {
+  border-color: #0066E5;
+}
+
+/* Invalid */
+QDialog#settings_dialog QLineEdit[invalid="true"] {
+  border-color: #A00000;
+}
+
+QDialog#settings_dialog QLabel#validation_label {
+  color: #CC0000;
+}
+
+/* Radios */
+QDialog#settings_dialog QRadioButton {
+  color: #BBBBBB;
+}
+
+QDialog#settings_dialog QRadioButton::indicator {
   background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 8px;
+}
+
+QDialog#settings_dialog QRadioButton::indicator:checked {
+  background-color: #0066E5;
+  color: #0066E5;
+}
+
+/* Buttons */
+QDialog#settings_dialog QPushButton#cancel_button {
+  background-color: #202020;
+  border-color: #383838;
+  color: #AAAAAA;
+}
+
+QDialog#settings_dialog QPushButton#cancel_button:hover {
+  background-color: #323232;
+  border-color: #424242;
+}
+
+QDialog#settings_dialog QPushButton#cancel_button:pressed {
+  background-color: #525252;
+  border-color: #424242;
+}
+
+
+QDialog#settings_dialog QPushButton#save_button {
+  background-color: #00377B;
+  border-color: #003F8D;
+  color: #DDDDDD;
+}
+
+QDialog#settings_dialog QPushButton#save_button:hover {
+  background-color: #0049A3;
+}
+
+QDialog#settings_dialog QPushButton#save_button:pressed {
+  background-color: #0066E5;
 }

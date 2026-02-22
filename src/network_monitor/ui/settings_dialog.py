@@ -164,29 +164,56 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.settings: QSettings = QSettings()
         self.setWindowTitle("Settings")
-        self.setFixedSize(600, 450)
+        self.setFixedSize(600, 475)
         self.setObjectName("settings_dialog")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         # Target method
         self.target_method_group = QButtonGroup(self)
+        self.target_method_group.setExclusive(True)
 
         self.ip_method_radio_button = QRadioButton("IP Address")
         self.hostname_method_radio_button = QRadioButton("Hostname")
         self.url_method_radio_button = QRadioButton("URL")
 
-        self.target_method_group.addButton(self.ip_method_radio_button)
-        self.target_method_group.addButton(self.hostname_method_radio_button)
-        self.target_method_group.addButton(self.url_method_radio_button)
+        for radio in (
+            self.ip_method_radio_button,
+            self.hostname_method_radio_button,
+            self.url_method_radio_button
+        ):
+            radio.setProperty("role", "method_radio")
 
-        target_method_group_box = QGroupBox("Method")
-        target_method_layout = QVBoxLayout(target_method_group_box)
+        self.target_method_group.addButton(self.ip_method_radio_button, 0)
+        self.target_method_group.addButton(self.hostname_method_radio_button, 1)
+        self.target_method_group.addButton(self.url_method_radio_button, 2)
+
+        method_label = QLabel("Method")
+        method_label.setProperty("role", "method_heading")
+        method_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+        target_method_group_box = QGroupBox()
+        target_method_group_box.setTitle("")
         target_method_group_box.setObjectName("method_box")
-        target_method_group_box.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        target_method_group_box.setAttribute(
+            Qt.WidgetAttribute.WA_StyledBackground, True
+        )
+        target_method_group_box.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
 
+        target_method_layout = QVBoxLayout(target_method_group_box)
+        target_method_layout.setContentsMargins(12, 12, 12, 12)
+        target_method_layout.setSpacing(8)
         target_method_layout.addWidget(self.ip_method_radio_button)
         target_method_layout.addWidget(self.hostname_method_radio_button)
         target_method_layout.addWidget(self.url_method_radio_button)
+
+        method_container = QWidget()
+        method_container.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
+
+        method_container_layout = QVBoxLayout(method_container)
+        method_container_layout.setContentsMargins(0, 0, 0, 0)
+        method_container_layout.setSpacing(6) # Space between label and box
+        method_container_layout.addWidget(method_label)
+        method_container_layout.addWidget(target_method_group_box)
 
         # IP Page
         self.ip_target_line_edit = QLineEdit()
@@ -195,14 +222,22 @@ class SettingsDialog(QDialog):
         self.ip_port_spin_box = QSpinBox()
         self.ip_port_spin_box.setRange(1, 65535)
         self.ip_port_spin_box.setValue(443)
-        self.ip_port_spin_box.setMaximumWidth(80)
+        self.ip_port_spin_box.setMaximumWidth(100)
+        self.ip_preview_label = QLabel()
+        self.ip_preview_label.setObjectName("ip_preview_label")
+        self.ip_preview_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.ip_preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        ip_page_widget = QWidget()
-        ip_page_form_layout = QFormLayout(ip_page_widget)
+        ip_form_container = QWidget()
+        ip_page_form_layout = QFormLayout(ip_form_container)
         ip_page_form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         ip_page_form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         ip_address_label = QLabel("IP:")
+        ip_address_label.setProperty("role", "field_label")
         ip_port_label = QLabel("Port:")
+        ip_port_label.setProperty("role", "field_label")
 
         apply_tooltip((ip_address_label,), SETTINGS_TOOLTIPS["ip_input"])
         apply_tooltip((ip_port_label,), SETTINGS_TOOLTIPS["ip_port"])
@@ -210,30 +245,59 @@ class SettingsDialog(QDialog):
         ip_page_form_layout.addRow(ip_address_label, self.ip_target_line_edit)
         ip_page_form_layout.addRow(ip_port_label, self.ip_port_spin_box)
 
+        ip_page_widget = QWidget()
+        ip_page_layout = QVBoxLayout(ip_page_widget)
+        ip_page_layout.setContentsMargins(0, 0, 0, 0)
+        ip_page_layout.setSpacing(0)
+
+        ip_page_layout.addStretch(1)
+        ip_page_layout.addWidget(ip_form_container)
+        ip_page_layout.addStretch(1)
+        ip_page_layout.addWidget(self._centered_row(self.ip_preview_label))
+
         # Hostname Page
         self.hostname_target_line_edit = QLineEdit()
         self.hostname_target_line_edit.setPlaceholderText("e.g., google.com (optional: :443)")
         self.hostname_target_line_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.hostname_preview_label = QLabel()
+        self.hostname_preview_label.setObjectName("hostname_preview_label")
+        self.hostname_preview_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.hostname_preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        hostname_page_widget = QWidget()
-        hostname_page_form_layout = QFormLayout(hostname_page_widget)
+        hostname_form_container = QWidget()
+        hostname_page_form_layout = QFormLayout(hostname_form_container)
         hostname_page_form_layout.setLabelAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
         hostname_page_form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         hostname_label = QLabel("Hostname:")
+        hostname_label.setProperty("role", "field_label")
 
         apply_tooltip((hostname_label,), SETTINGS_TOOLTIPS["hostname_input"])
         hostname_page_form_layout.addRow(hostname_label, self.hostname_target_line_edit)
+
+        hostname_page_widget = QWidget()
+        hostname_page_layout = QVBoxLayout(hostname_page_widget)
+        hostname_page_layout.setContentsMargins(0, 0, 0, 0)
+        hostname_page_layout.setSpacing(0)
+
+        hostname_page_layout.addStretch(1)
+        hostname_page_layout.addWidget(hostname_form_container)
+        hostname_page_layout.addStretch(1)
+        hostname_page_layout.addWidget(self._centered_row(self.hostname_preview_label))
 
         # URL Page
         self.url_target_line_edit = QLineEdit()
         self.url_target_line_edit.setPlaceholderText("e.g., https://www.google.com:443/path")
         self.url_target_line_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.url_preview_label = QLabel("")
+        self.url_preview_label = QLabel()
+        self.url_preview_label.setObjectName("url_preview_label")
         self.url_preview_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
+        self.url_preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         url_page_widget = QWidget()
         url_page_layout = QVBoxLayout(url_page_widget)
@@ -242,15 +306,22 @@ class SettingsDialog(QDialog):
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
         url_page_form_layout.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
+        url_page_layout.setContentsMargins(0, 0, 0, 0)
+        url_page_layout.setSpacing(0)
+
         url_label = QLabel("URL:")
+        url_label.setProperty("role", "field_label")
         
         apply_tooltip((url_label,), SETTINGS_TOOLTIPS["url_input"])
+        url_page_layout.addStretch(1)
         url_page_form_layout.addRow(url_label, self.url_target_line_edit)
 
         url_page_layout.addLayout(url_page_form_layout)
-        url_page_layout.addWidget(self.url_preview_label)
+        url_page_layout.addStretch(1)
+        url_page_layout.addWidget(self._centered_row(self.url_preview_label))
 
         self.target_stack_widget = QStackedWidget()
+        self.target_stack_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.target_stack_widget.addWidget(ip_page_widget)          # Index 0
         self.target_stack_widget.addWidget(hostname_page_widget)    # Index 1
         self.target_stack_widget.addWidget(url_page_widget)         # Index 2
@@ -264,7 +335,7 @@ class SettingsDialog(QDialog):
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred
         )
         target_body_layout.addWidget(
-            target_method_group_box, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            method_container, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
         )
 
         # Let input fields fill the space centered vertically/horizontally
@@ -273,11 +344,7 @@ class SettingsDialog(QDialog):
         inputs_wrapper_layout.setContentsMargins(0, 0, 0, 0)
         inputs_wrapper_layout.setSpacing(0)
 
-        inputs_wrapper_layout.addStretch(1)
-        inputs_wrapper_layout.addWidget(self.target_stack_widget, 0, Qt.AlignmentFlag.AlignVCenter)
-        inputs_wrapper_layout.addStretch(1)
-
-        inputs_wrapper.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        inputs_wrapper_layout.addWidget(self.target_stack_widget)
 
         target_body_layout.addWidget(inputs_wrapper, 1, Qt.AlignmentFlag.AlignVCenter)
         self.target_section = self._make_titled_card(
@@ -308,9 +375,20 @@ class SettingsDialog(QDialog):
         )
 
         self.interval_section = self._make_titled_card("Check Interval", interval_body, "interval_card")
-        self.timeout_section = self._make_titled_card("Timeout", timeout_body, "timeout_card")
+        self.timeout_section = self._make_titled_card("Timeout Interval", timeout_body, "timeout_card")
 
-        self.validation_label = QLabel("")
+        self.validation_label = QLabel()
+        self.validation_label.setObjectName("validation_label")
+        self.validation_label.setWordWrap(True)
+        self.validation_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.validation_label.setVisible(False)
+
+        validation_container = QWidget()
+        validation_layout = QVBoxLayout(validation_container)
+        validation_layout.setContentsMargins(0, 0, 0, 0)
+        validation_layout.setSpacing(0)
+        validation_layout.addWidget(self.validation_label)
+        validation_layout.addStretch(1)
 
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Cancel | QDialogButtonBox.StandardButton.Save
@@ -342,23 +420,36 @@ class SettingsDialog(QDialog):
         main_layout.addWidget(self.target_section, 0, 0, 1, 2)
 
         # Row 1: Interval (left) and Timeout (right)
-        main_layout.addWidget(self.interval_section, 1, 0)
-        main_layout.addWidget(self.timeout_section, 1, 1)
+        row_1 = QWidget()
+        row_1_layout = QHBoxLayout(row_1)
+        row_1_layout.setContentsMargins(0, 0, 0, 0)
+        row_1_layout.setSpacing(main_layout.horizontalSpacing() or 12)
+
+        row_1_layout.addWidget(self.interval_section)
+        row_1_layout.addWidget(self.timeout_section)
+        row_1_layout.setStretch(0, 1)
+        row_1_layout.setStretch(1, 1)
+
+        main_layout.addWidget(row_1, 1, 0, 1, 2)
 
         # Make both columns share space evenly
         main_layout.setColumnStretch(0, 1)
         main_layout.setColumnStretch(1, 1)
 
+        # Keep rows same space
+        main_layout.setRowStretch(0, 0)  # Target
+        main_layout.setRowStretch(1, 0)  # Interval/Timeout (stable)
+        main_layout.setRowStretch(2, 1)  # Validation (takes leftover space)
+        main_layout.setRowStretch(3, 0)  # Buttons
+
         # Row 2: Validation spans 2 columns
-        main_layout.addWidget(self.validation_label, 2, 0, 1, 2)
+        main_layout.addWidget(validation_container, 2, 0, 1, 2)
 
         # Row 3: Cancel and Save buttons bottom right
         main_layout.addWidget(self.button_box, 3, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignRight)
 
         # Signals
-        self.ip_method_radio_button.toggled.connect(self._on_target_method_changed)
-        self.hostname_method_radio_button.toggled.connect(self._on_target_method_changed)
-        self.url_method_radio_button.toggled.connect(self._on_target_method_changed)
+        self.target_method_group.idToggled.connect(self._on_target_method_changed)
 
         self.ip_target_line_edit.textChanged.connect(self._update_validation_ui)
         self.hostname_target_line_edit.textChanged.connect(self._update_validation_ui)
@@ -367,8 +458,6 @@ class SettingsDialog(QDialog):
         self.ip_port_spin_box.valueChanged.connect(self._update_validation_ui)
 
         self._load_settings()
-        self._on_target_method_changed()
-        self._update_validation_ui()
 
 
     def _ensure_default_target_for_method(self) -> None:
@@ -466,9 +555,9 @@ class SettingsDialog(QDialog):
         for seconds_value in preset_values:
             preset_radio_button = QRadioButton(f"{seconds_value:g} s")
             preset_radio_button.setProperty("seconds_value", seconds_value)
+            preset_radio_button.setProperty("role", "preset_radio")
             button_group.addButton(preset_radio_button)
             presets_layout.addWidget(preset_radio_button)
-
 
         # Bottom row: Custom radio and spinbox centered vertically
         custom_widget = QWidget()
@@ -482,14 +571,18 @@ class SettingsDialog(QDialog):
         custom_row_layout.setContentsMargins(0, 0, 0, 0)
         custom_row_layout.setSpacing(10)
 
-        custom_radio_button = QRadioButton("Custom:")
+        custom_radio_button = QRadioButton()
+        custom_radio_button.setProperty("role", "preset_radio")
+
         custom_spin_box = QDoubleSpinBox()
+        custom_spin_box.setProperty("role", "custom_spin")
+
         custom_spin_box.setRange(0.5, 60)
         custom_spin_box.setDecimals(1)
         custom_spin_box.setSingleStep(0.5)
         custom_spin_box.setSuffix(" s")
         custom_spin_box.setEnabled(False)
-        custom_spin_box.setMaximumWidth(70)
+        custom_spin_box.setMaximumWidth(90)
 
         custom_center = QWidget()
         custom_center_layout = QHBoxLayout(custom_center)
@@ -551,6 +644,18 @@ class SettingsDialog(QDialog):
 
         preset_value = checked_button.property("seconds_value")
         return float(preset_value)
+
+
+    def _centered_row(self, widget: QWidget) -> QWidget:
+        wrapper = QWidget()
+        layout = QHBoxLayout(wrapper)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addStretch(1)
+        layout.addWidget(widget)
+        layout.addStretch(1)
+
+        return wrapper
 
 
     def _set_seconds_group_value(
@@ -675,6 +780,9 @@ class SettingsDialog(QDialog):
 
         self._clear_invalid_markers()
         self.validation_label.setText("")
+        self.validation_label.setVisible(False)
+        self.ip_preview_label.setText("")
+        self.hostname_preview_label.setText("")
         self.url_preview_label.setText("")
 
         try:
@@ -682,13 +790,20 @@ class SettingsDialog(QDialog):
             host, port = normalized.host, normalized.port
         except ValueError as exc:
             self.validation_label.setText(str(exc))
+            self.validation_label.setVisible(True)
             self._mark_activate_input_invalid()
             save_button.setEnabled(False)
             return
 
+        if self._current_method() == self.METHOD_IP:
+            self.ip_preview_label.setText(f"Checking target: {host}:{port}")
+
+        if self._current_method() == self.METHOD_HOSTNAME:
+            self.hostname_preview_label.setText(f"Checking target: {host}:{port}")
+
         # For URL, show the normalized connection target
         if self._current_method() == self.METHOD_URL:
-            self.url_preview_label.setText(f"Establishing connection to: {host}:{port}")
+            self.url_preview_label.setText(f"Checking target: {host}:{port}")
 
         save_button.setEnabled(True)
 
