@@ -255,3 +255,13 @@ Changed
 - Settings now is able to be styled and match the theme with the rest of the application
 - Consistent pill styling
     - Application only has a dark theme at the moment
+
+### 0.7.1
+Changed
+- Settings Dialog:
+    - Redesigned the layout into section "cards" (Target/Check Interval/Timeout)
+    - Target Section: Method Mini-box now hugs the left while inputs fill the remaining space
+    - Interval/Timeout: Preset options moved into a single horizontal row with custom input underneath
+    - Port field width reduced to better reflect the valid range
+    - Custom Interval/Timeout field width reduced as well
+- `light.qss`: Still **WORK IN PROGRESS**
