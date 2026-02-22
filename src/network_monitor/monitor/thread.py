@@ -21,9 +21,11 @@ def try_connect(
             return True, latency_ms, None
     except socket.gaierror:
         return False, None, "dns"
-    except TimeoutError:
+    except (socket.timeout, TimeoutError):
         return False, None, "timeout"
     except OSError as exc:
+        if exc.errno == errno.ETIMEDOUT:
+            return False, None, "timeout"
         if exc.errno == errno.ECONNREFUSED:
             return False, None, "refused"
         if exc.errno in (errno.ENETUNREACH, errno.EHOSTUNREACH):
@@ -32,7 +34,7 @@ def try_connect(
 
 
 class MonitorThread(QThread):
-    result = Signal(object)
+    result = Signal(CheckResult)
 
 
     def __init__(
@@ -52,6 +54,11 @@ class MonitorThread(QThread):
 
     def stop(self) -> None:
         self.is_running = False
+        self.requestInterruption()
+
+
+    def _should_stop(self) -> bool:
+        return (not self.is_running) or self.isInterruptionRequested()
 
 
     def run(self) -> None:
@@ -60,27 +67,38 @@ class MonitorThread(QThread):
             ("1.0.0.1", 443),
         ]
 
-        while self.is_running:
+        while not self._should_stop():
             loop_start_time = time.monotonic()
 
+            # Target connect (cannot be interrupted mid-call)
             target_ok, target_latency_ms, target_error_kind = try_connect(
                 self.server,
                 self.port,
                 self.timeout_s
             )
 
+            # If asked to stop, exit BEFORE probes / emit / sleep
+            if self._should_stop():
+                break
+
             if target_ok:
                 status = "online"
                 latency_ms = target_latency_ms
                 error_kind = None
             else:
-                # If the target failed, test if anything external can be reached
+                # Probes (stop-aware)
                 probe_ok = False
                 for probe_host, probe_port in probe_endpoints:
+                    if self._should_stop():
+                        break
+
                     ok, _, _ = try_connect(probe_host, probe_port, self.timeout_s)
                     if ok:
                         probe_ok = True
                         break
+
+                if self._should_stop():
+                    break
 
                 status = "unreachable" if probe_ok else "offline"
                 latency_ms = None
@@ -95,6 +113,11 @@ class MonitorThread(QThread):
             
             self.result.emit(check_result)
 
+            # Interruptible sleep (good for clean shutdown)
             loop_elapsed_time = time.monotonic() - loop_start_time
             remaining_sleep_time = max(0.0, self.interval_s - loop_elapsed_time)
-            self.msleep(int(remaining_sleep_time * 1000))
+            sleep_ms = int(remaining_sleep_time * 1000)
+            step_ms = 50
+            while sleep_ms > 0 and not self._should_stop():
+                self.msleep(min(step_ms, sleep_ms))
+                sleep_ms -= step_ms
