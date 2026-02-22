@@ -257,6 +257,15 @@ Changed
     - Application only has a dark theme at the moment
 
 ### 0.7.1
+Changed
+- Settings Dialog:
+    - Redesigned the layout into section "cards" (Target/Check Interval/Timeout)
+    - Target Section: Method Mini-box now hugs the left while inputs fill the remaining space
+    - Interval/Timeout: Preset options moved into a single horizontal row with custom input underneath
+    - Port field width reduced to better reflect the valid range
+    - Custom Interval/Timeout field width reduced as well
+- `light.qss`: Still **WORK IN PROGRESS**
+
 Fixed
 - Monitor thread shutdown:
     - Prevented `QThread: Destroyed while thread is still running` crash on close/restart
