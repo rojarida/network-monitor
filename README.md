@@ -255,3 +255,10 @@ Changed
 - Settings now is able to be styled and match the theme with the rest of the application
 - Consistent pill styling
     - Application only has a dark theme at the moment
+
+### 0.7.1
+Fixed
+- Monitor thread shutdown:
+    - Prevented `QThread: Destroyed while thread is still running` crash on close/restart
+    - Made monitor loop stop-aware (checks during probes and interruptible sleep)
+    - Improved timeout detection for socket connections
