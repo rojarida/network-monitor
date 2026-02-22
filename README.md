@@ -86,9 +86,12 @@ Latency is measured as the TCP connect time (when `Online`).
 │           ├── main_window.py
 │           ├── monitor_view.py
 │           ├── settings_dialog.py
-│           ├── styles
-│           │   ├── app.qss
-│           │   └── __init__.py
+│           ├── themes
+│           │   ├── base.qss
+│           │   ├── dark.qss
+│           │   ├── __init__.py
+│           │   ├── light.qss
+│           │   └── theme_manager.py
 │           └── tooltips.py
 └── uv.lock
 ```
@@ -130,7 +133,7 @@ python -m network_monitor
 - [x] Implement target method in settings (implemented in [0.6.0](#060))
 - [x] Tooltips for all metrics (more detailed informations) (implemented in [0.6.1](#061))
 - [ ] Click-to-copy full target (URL) from the server pill
-- [ ] Light/Dark themes
+- [ ] Light/Dark themes (started implementation in [0.7.0](#070))
 - [ ] Taskbar Functionality
 - [ ] Ability to resize application window
 - [ ] Disconnect debounce (reduce false disconnects)
@@ -235,3 +238,20 @@ Changed
 
 Fixed
 - Hostname targets no longer incorrectly require a `.` to be considered valid (e.g., `romanjay-srv` now works).
+
+### 0.7.0
+Added
+- Theme System:
+    - `base.qss`: Shared structure/layout
+    - `dark.qss`: Dark theme
+    - `light.qss`: Light theme (**WORK IN PROGRESS**)
+- ThemeManager:
+    - Centralized theme loading to prepare for the themes
+- Live QSS reload (`*.qss` changes update the UI when saved)
+
+Changed
+- Replaced labels with section titles
+- Completely new settings layout
+- Settings now is able to be styled and match the theme with the rest of the application
+- Consistent pill styling
+    - Application only has a dark theme at the moment
