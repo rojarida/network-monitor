@@ -265,3 +265,9 @@ Changed
     - Port field width reduced to better reflect the valid range
     - Custom Interval/Timeout field width reduced as well
 - `light.qss`: Still **WORK IN PROGRESS**
+
+Fixed
+- Monitor thread shutdown:
+    - Prevented `QThread: Destroyed while thread is still running` crash on close/restart
+    - Made monitor loop stop-aware (checks during probes and interruptible sleep)
+    - Improved timeout detection for socket connections

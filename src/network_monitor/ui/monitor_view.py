@@ -79,6 +79,7 @@ class MonitorView(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._stopping_threads: list[MonitorThread] = []
 
         self.setObjectName("monitor_view")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -425,9 +426,8 @@ class MonitorView(QWidget):
 
 
     def apply_config(self, config: MonitorConfig) -> None:
-        # Stop current monitor
-        self.monitor_thread.stop()
-        self.monitor_thread.wait(1500)
+        self._stop_monitor_thread(blocking=False)
+
         self.monitor_state.set_endpoint(config.server, config.port)
 
         # Restart thread with new configuration
@@ -449,7 +449,43 @@ class MonitorView(QWidget):
         self.refresh_labels()
 
 
+    def _stop_monitor_thread(self, *, blocking: bool = False) -> None:
+        thread = getattr(self, "monitor_thread", None)
+        if not thread:
+            return
+        
+        thread.stop()
+
+        # Worst-case
+        timeout_s = getattr(thread, "timeout_s", 1.0)
+
+        # Apply-config
+        # Shutdown: Wait long enough for the in-flight connect to return
+        wait_ms = int(((timeout_s + 1.0) if blocking else min(timeout_s, 1.0)) * 1000)
+        finished = thread.wait(wait_ms)
+
+        try:
+            thread.result.disconnect(self.on_check_result)
+        except (TypeError, RuntimeError):
+            pass
+
+        if finished:
+            thread.deleteLater()
+        else:
+            # If we didn't finish, keep it referenced until natural finish
+            self._stopping_threads.append(thread)
+
+            def _cleanup() -> None:
+                if thread in self._stopping_threads:
+                    self._stopping_threads.remove(thread)
+                thread.deleteLater()
+
+            thread.finished.connect(_cleanup)
+
+        self.monitor_thread = None
+
+
     def shutdown(self) -> None:
-        self.ui_refresh_timer.stop()
-        self.monitor_thread.stop()
-        self.monitor_thread.wait(1500)
+        if getattr(self, "ui_refresh_timer", None):
+            self.ui_refresh_timer.stop()
+        self._stop_monitor_thread(blocking=True)
