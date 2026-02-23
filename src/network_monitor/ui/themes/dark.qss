@@ -127,11 +127,11 @@ QDialog#settings_dialog QLabel{
 
 /* Headings */
 QDialog#settings_dialog QLabel[role="section_heading"] {
-  color: #BBBBBB;
+  color: #AAAAAA;
 }
 
 QDialog#settings_dialog QLabel[role="method_heading"] {
-  color: #DDDDDD;
+  color: #BBBBBB;
 }
 
 /* Field labels (IP:, Port:, Hostname:, URL:) */
@@ -149,13 +149,13 @@ QDialog#settings_dialog QLabel#url_preview_label {
 /* Section cards */
 QDialog#settings_dialog QFrame[role="section_card"] {
   background-color: #202020;
-  border-color: #353535;
+  border-color: #272727;
 }
 
 /* Method mini-card */
 QDialog#settings_dialog QGroupBox#method_box {
   background-color: #292929;
-  border-color: #414141;
+  border-color: #353535;
 }
 
 /* Inputs */
@@ -163,7 +163,7 @@ QDialog#settings_dialog QLineEdit,
 QDialog#settings_dialog QSpinBox,
 QDialog#settings_dialog QDoubleSpinBox {
   color: #DDDDDD;
-  border-color: #555555;
+  border-color: #444444;
   background-color: #292929;
 }
 
