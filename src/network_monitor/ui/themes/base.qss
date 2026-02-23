@@ -1,7 +1,7 @@
 /* ----- MONITOR VIEW -------- */
 
-QLabel {
-  padding: 2px 0px;
+QWidget#monitor_view QLabel {
+  padding: 0px; 
 }
 
 QWidget#stats_container {
@@ -11,13 +11,15 @@ QWidget#stats_container {
 
 /* ------ STATUS ------ */
 
-QLabel#status_label {
+QWidget#monitor_view QLabel#status_label {
   qproperty-alignment: 'AlignVCenter | AlignCenter';
+  min-width: 20px;
   min-height: 50px;
   max-height: 50px;
   border-radius: 25px;
-  min-width: 20px;
-  padding: 0px 18px;
+
+  padding: 0px 12px;
+
   font-weight: 700;
   font-size: 30px;
 }
@@ -80,14 +82,165 @@ QPushButton#settings_button {
 
 /* ------ SETTINGS MENU ------ */
 
+QDialog#settings_dialog {
+  padding: 10px;
+}
+
+/* Method label above the target methods */
+QDialog#settings_dialog QLabel[role="method_heading"] {
+  padding: 4px;
+  margin: -4px;
+
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* Section titles: Target / Check Interval / Timeout Interval */
+QDialog#settings_dialog QLabel[role="section_heading"] {
+  padding: 0px;
+
+  font-weight: 600;
+  font-size: 24px;
+}
+
+QDialog#settings_dialog QLabel#ip_preview_label,
+QDialog#settings_dialog QLabel#hostname_preview_label,
+QDialog#settings_dialog QLabel#url_preview_label {
+  margin-top: 5px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Section Cards */
 QDialog#settings_dialog QFrame[role="section_card"] {
+  border-radius: 20px;
   border: 2px solid transparent;
 }
 
-QDialog#settings_dialog QWidget[role="section_body"] {
-  border: 2px solid transparent;
-}
-
+/* Target method mini-box */
 QDialog#settings_dialog QGroupBox#method_box {
+  border-radius: 15px;
   border: 2px solid transparent;
+  
+  padding: 2px 0px;
+  margin: 2px 10px;
+}
+
+/* Inputs */
+QDialog#settings_dialog QLineEdit,
+QDialog#settings_dialog QSpinBox,
+QDialog#settings_dialog QDoubleSpinBox {
+  padding: 4px 8px;
+
+  border-radius: 5px;
+  border: 1px solid transparent;
+
+  font-weight: 500;
+  font-size: 15px;
+}
+
+/* When input field is focused */
+QDialog#settings_dialog QLineEdit:focus,
+QDialog#settings_dialog QSpinBox:focus,
+QDialog#settings_dialog QDoubleSpinBox:focus {
+  border-width: 2px;
+}
+
+/* Radio buttons */
+QDialog#settings_dialog QRadioButton {
+  spacing: 4px;
+  margin: 0px 4px;
+  padding: 2px 3px;
+}
+
+QDialog#settings_dialog QRadioButton::indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 10px;
+}
+
+/* Cancel and Save buttons */
+QDialog#settings_dialog QPushButton {
+  qproperty-iconSize: 18px;
+
+  min-height: 22px;
+  padding: 6px;
+  margin: 5px;
+  border-radius: 15px;
+  border: 1px solid transparent;
+  
+  font-weight: 600;
+  font-size: 18px;
+}
+
+QDialog#settings_dialog QPushButton#save_button,
+QDialog#settings_dialog QPushButton#cancel_button {
+  min-width: 100px;
+  margin: 0px 1px;
+}
+
+/* Target method labels */
+QDialog#settings_dialog QRadioButton[role="method_radio"] {
+  padding: 2px;
+  spacing: 8px;
+
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* Interval second labels */
+QDialog#settings_dialog QRadioButton[seconds_value="1"],
+QDialog#settings_dialog QRadioButton[seconds_value="2"],
+QDialog#settings_dialog QRadioButton[seconds_value="5"] {
+  padding: 4px 8px;
+  spacing: 7px;
+
+  font-weight: 600;
+  font-size: 16px;
+}
+
+QDialog#settings_dialog QDoubleSpinBox[role="custom_spin"] {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Input field labels */
+QDialog#settings_dialog QLabel[role="field_label"] {
+  margin: 4px -2px;
+  padding: 0px 0px;
+
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Spin buttons */
+QDialog#settings_dialog QAbstractSpinBox {
+  padding-right: 6px;
+}
+
+QDialog#settings_dialog QAbstractSpinBox QLineEdit {
+  background: transparent;
+  border: none;
+  padding: 0px 6px;
+}
+
+/* Place and size the buttons so the hitbox is correct */
+QDialog#settings_dialog QAbstractSpinBox::up-button {
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  height: 17px;
+  width: 24px;
+}
+
+QDialog#settings_dialog QAbstractSpinBox::down-button {
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  height: 17px;
+  width: 24px;
+}
+
+QDialog#settings_dialog QLabel#validation_label {
+  margin: 0px;
+  font-weight: 600;
+  font-size: 17px;
 }

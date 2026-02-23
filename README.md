@@ -271,3 +271,16 @@ Fixed
     - Prevented `QThread: Destroyed while thread is still running` crash on close/restart
     - Made monitor loop stop-aware (checks during probes and interruptible sleep)
     - Improved timeout detection for socket connections
+
+### 0.7.2
+Changed
+- Settings Dialog:
+    - Added styling and colors
+    - Removed a preset option for check interval and timeout interval
+    - Added target preview for all target methods
+
+Fixed
+- Settings Dialog:
+    - Fixed issue where custom arrows weren't clickable unless option was explicitly selected
+    - Fixed issue where clickable area for custom arrows was not lining up correctly
+    - Radio buttons weren't completely solid
