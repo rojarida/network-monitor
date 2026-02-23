@@ -6,7 +6,7 @@ from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
 from network_monitor.ui.main_window import MainWindow
-from network_monitor.ui.themes.theme_manager import ThemeManager
+from network_monitor.ui.themes.manager import ThemeManager
 
 
 def load_stylesheet(theme: str | None = None) -> str:

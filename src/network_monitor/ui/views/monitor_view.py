@@ -17,10 +17,10 @@ from PySide6.QtWidgets import (
     QStyleOption,
 )
 
-from network_monitor.monitor.thread import MonitorThread
-from network_monitor.state import MonitorState, CheckResult
-from network_monitor.ui.settings_dialog import MonitorConfig
-from network_monitor.ui.tooltips import (
+from network_monitor.services.monitor.thread import MonitorThread
+from network_monitor.services.monitor.state import MonitorState, CheckResult
+from network_monitor.ui.dialogs.settings.dialog import MonitorConfig
+from network_monitor.ui.help.tooltips import (
     METRIC_TOOLTIPS,
     apply_tooltip,
     status_value_tooltip

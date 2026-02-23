@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.scripts]
-network-monitor = "network_monitor.app:main"
+network-monitor = "network_monitor.main:main"
 
 [project.optional-dependencies]
 dev = [

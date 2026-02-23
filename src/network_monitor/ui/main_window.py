@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QMainWindow, QDialog
 
-from network_monitor.ui.monitor_view import MonitorView
-from network_monitor.ui.settings_dialog import SettingsDialog, MonitorConfig
+from network_monitor.ui.views.monitor_view import MonitorView
+from network_monitor.ui.dialogs.settings.dialog import SettingsDialog, MonitorConfig
 
 
 class MainWindow(QMainWindow):

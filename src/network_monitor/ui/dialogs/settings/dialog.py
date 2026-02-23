@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from network_monitor.ui.tooltips import SETTINGS_TOOLTIPS, apply_tooltip
+from network_monitor.ui.help.tooltips import SETTINGS_TOOLTIPS, apply_tooltip
 
 
 # Regex for handling URLs
