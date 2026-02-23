@@ -189,11 +189,11 @@ QDialog#settings_dialog QRadioButton {
 
 QDialog#settings_dialog QRadioButton::indicator {
   background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  border-radius: 8px;
+  border: 2px solid #999999;
 }
 
 QDialog#settings_dialog QRadioButton::indicator:checked {
+  border: 2px solid #999999;
   background-color: #0066E5;
   color: #0066E5;
 }

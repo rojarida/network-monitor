@@ -106,7 +106,7 @@ QDialog#settings_dialog QLabel[role="section_heading"] {
 QDialog#settings_dialog QLabel#ip_preview_label,
 QDialog#settings_dialog QLabel#hostname_preview_label,
 QDialog#settings_dialog QLabel#url_preview_label {
-  margin-top: 15px;
+  margin-top: 5px;
   font-weight: 600;
   font-size: 16px;
 }
@@ -122,8 +122,8 @@ QDialog#settings_dialog QGroupBox#method_box {
   border-radius: 15px;
   border: 2px solid transparent;
   
-  padding: 2px;
-  margin: 2px;
+  padding: 2px 0px;
+  margin: 2px 10px;
 }
 
 /* Inputs */
@@ -149,12 +149,14 @@ QDialog#settings_dialog QDoubleSpinBox:focus {
 /* Radio buttons */
 QDialog#settings_dialog QRadioButton {
   spacing: 4px;
-  padding: 3px 4px;
+  margin: 0px 4px;
+  padding: 2px 3px;
 }
 
 QDialog#settings_dialog QRadioButton::indicator {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+  border-radius: 10px;
 }
 
 /* Cancel and Save buttons */
@@ -180,18 +182,18 @@ QDialog#settings_dialog QPushButton#cancel_button {
 /* Target method labels */
 QDialog#settings_dialog QRadioButton[role="method_radio"] {
   padding: 2px;
-  spacing: 3px;
+  spacing: 8px;
 
   font-weight: 600;
   font-size: 15px;
 }
 
 /* Interval second labels */
-QDialog#settings_dialog QRadioButton[seconds_value="0.5"],
 QDialog#settings_dialog QRadioButton[seconds_value="1"],
 QDialog#settings_dialog QRadioButton[seconds_value="2"],
 QDialog#settings_dialog QRadioButton[seconds_value="5"] {
-  padding: 4px;
+  padding: 4px 8px;
+  spacing: 7px;
 
   font-weight: 600;
   font-size: 16px;
@@ -226,12 +228,14 @@ QDialog#settings_dialog QAbstractSpinBox QLineEdit {
 QDialog#settings_dialog QAbstractSpinBox::up-button {
   subcontrol-origin: border;
   subcontrol-position: top right;
+  height: 17px;
   width: 24px;
 }
 
 QDialog#settings_dialog QAbstractSpinBox::down-button {
   subcontrol-origin: border;
   subcontrol-position: bottom right;
+  height: 17px;
   width: 24px;
 }
 

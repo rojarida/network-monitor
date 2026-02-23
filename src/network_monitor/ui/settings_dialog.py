@@ -7,12 +7,13 @@ from urllib.parse import urlsplit
 from typing import Any
 from dataclasses import dataclass
 
-from PySide6.QtCore import QSettings, Qt
+from PySide6.QtCore import QSettings, Qt, QObject, QEvent
 from PySide6.QtWidgets import (
     QFrame,
     QButtonGroup,
     QDialog,
     QDialogButtonBox,
+    QAbstractSpinBox,
     QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
@@ -37,6 +38,20 @@ _HOSTNAME_RE = re.compile(
     r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)"
     r"(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*\.?$"
 )
+
+
+class CheckRadioOnInteractFilter(QObject):
+    def __init__(self, radio_button: QRadioButton, parent=None) -> None:
+        super().__init__(parent)
+        self._radio_button = radio_button
+
+
+    def eventFilter(self, watched, event):
+        if event.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.FocusIn):
+            if self._radio_button is not None and self._radio_button.isChecked():
+                self._radio_button.setChecked(True)
+
+        return False
 
 
 @dataclass(frozen=True)
@@ -162,9 +177,10 @@ class SettingsDialog(QDialog):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self._event_filters: list[QObject] = []
         self.settings: QSettings = QSettings()
         self.setWindowTitle("Settings")
-        self.setFixedSize(600, 475)
+        self.setFixedSize(650, 500)
         self.setObjectName("settings_dialog")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
@@ -352,7 +368,7 @@ class SettingsDialog(QDialog):
         )
 
         # Radio groups for interval/timeout (presets and custom)
-        preset_values_seconds = [0.5, 1.0, 2.0, 5.0]
+        preset_values_seconds = [1.0, 2.0, 5.0]
 
         (
             interval_body,
@@ -569,20 +585,46 @@ class SettingsDialog(QDialog):
         custom_row = QWidget()
         custom_row_layout = QHBoxLayout(custom_row)
         custom_row_layout.setContentsMargins(0, 0, 0, 0)
-        custom_row_layout.setSpacing(10)
+        custom_row_layout.setSpacing(0)
 
         custom_radio_button = QRadioButton()
         custom_radio_button.setProperty("role", "preset_radio")
 
         custom_spin_box = QDoubleSpinBox()
         custom_spin_box.setProperty("role", "custom_spin")
-
         custom_spin_box.setRange(0.5, 60)
         custom_spin_box.setDecimals(1)
         custom_spin_box.setSingleStep(0.5)
         custom_spin_box.setSuffix(" s")
-        custom_spin_box.setEnabled(False)
         custom_spin_box.setMaximumWidth(90)
+
+        # Keep enabled so it can be clicked/focused
+        custom_spin_box.setEnabled(True)
+        custom_spin_box.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+        # Start inactive
+        custom_spin_box.lineEdit().setReadOnly(True)
+        custom_spin_box.setProperty("inactive", True)
+        self._repolish(custom_spin_box)
+
+        def set_custom_active(active: bool) -> None:
+            # Active -> Editable and Arrows
+            # Inactive -> Muted but clickable
+            custom_spin_box.setProperty("inactive", not active)
+            custom_spin_box.lineEdit().setReadOnly(not active)
+            custom_spin_box.setButtonSymbols(
+                QAbstractSpinBox.ButtonSymbols.UpDownArrows
+            )
+            self._repolish(custom_spin_box)
+
+        custom_radio_button.toggled.connect(set_custom_active)
+
+        # If user clicks the spinbox, select custom automatically
+        spin_filter = CheckRadioOnInteractFilter(custom_radio_button, self)
+        custom_spin_box.installEventFilter(spin_filter)
+        self._event_filters.append(spin_filter)
+
+        custom_spin_box.valueChanged.connect(lambda _v: custom_radio_button.setChecked(True))
 
         custom_center = QWidget()
         custom_center_layout = QHBoxLayout(custom_center)
@@ -608,11 +650,6 @@ class SettingsDialog(QDialog):
         root_layout.addWidget(presets_center)
         root_layout.addWidget(custom_center)
         root_layout.addStretch(1)
-
-        def on_button_clicked() -> None:
-            custom_spin_box.setEnabled(custom_radio_button.isChecked())
-
-        button_group.buttonClicked.connect(on_button_clicked)
 
         # Default selection (1s if present, otherwise first preset)
         default_set = False
@@ -670,12 +707,10 @@ class SettingsDialog(QDialog):
             preset_value = button.property("seconds_value")
             if preset_value is not None and float(preset_value) == float(value):
                 button.setChecked(True)
-                custom_spin_box.setEnabled(False)
                 return
 
-        # Otherwise, select Custom
+        # Otherwise, select custom
         custom_radio_button.setChecked(True)
-        custom_spin_box.setEnabled(True)
         custom_spin_box.setValue(float(value))
 
 
