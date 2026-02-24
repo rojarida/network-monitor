@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QStyleOption,
 )
 
-from network_monitor.persistence.settings_store import SettingsData
+from network_monitor.core.models import SettingsData
 from network_monitor.services.monitor.thread import MonitorThread
 from network_monitor.services.monitor.state import MonitorState, CheckResult
 from network_monitor.ui.help.tooltips import (

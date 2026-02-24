@@ -23,7 +23,7 @@ from network_monitor.core.normalize_target import (
     METHOD_HOSTNAME,
     METHOD_URL
 )
-from network_monitor.persistence.settings_store import SettingsDialogState
+from network_monitor.core.models import SettingsDialogState
 from network_monitor.ui.help.tooltips import SETTINGS_TOOLTIPS, apply_tooltip
 
 

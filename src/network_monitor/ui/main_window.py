@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QMainWindow, QDialog
 
-from network_monitor.persistence.settings_store import SettingsData, SettingsStore
+from network_monitor.persistence.settings_store import SettingsStore
+from network_monitor.core.models import SettingsData
 from network_monitor.ui.views.monitor_view import MonitorView
 from network_monitor.ui.dialogs.settings.dialog import SettingsDialog
 
