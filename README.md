@@ -20,6 +20,11 @@ When the target can't be reached, it uses a **fallback probe** to distinguish "n
     <img src="assets/screenshots/offline.png" alt="Offline">
 </p>
 
+<h3 align="center">Settings</h3>
+<p align="center">
+    <img src="assets/screenshots/settings.png" alt ="Settings">
+</p>
+
 # How It Works
 
 The app performs a TCP connection attempt to a configured target:
@@ -34,7 +39,7 @@ Latency is measured as the TCP connect time (when `Online`).
 
 - Three status states: **Online / Offline / Unreachable**
 - Configurable target:
-    - IP Addresses (IPv4/IPv6)
+    - IP Addresses (`IPv4/IPv6`)
     - Hostnames (e.g., `google.com`)
     - URLs (e.g., `https://www.google.com/`) - Normalized to host:port
 - Configurable check interval and timeout (preset radio buttons and optional custom values)
@@ -58,51 +63,26 @@ Latency is measured as the TCP connect time (when `Online`).
 - QSettings for persisted configuration
 - QSS for styling
 
-## Project Structure
+## Architecture Notes (v0.8.0)
 
-```text
-.
-├── assets
-│   ├── icons
-│   │   └── network-monitor_256x256.png
-│   └── screenshots
-│       ├── offline.png
-│       ├── online.png
-│       └── unreachable.png
-├── NetworkMonitor.spec
-├── pyproject.toml
-├── README.md
-├── src
-│   └── network_monitor
-│       ├── app.py
-│       ├── __init__.py
-│       ├── __main__.py
-│       ├── monitor
-│       │   ├── __init__.py
-│       │   └── thread.py
-│       ├── state.py
-│       └── ui
-│           ├── __init__.py
-│           ├── main_window.py
-│           ├── monitor_view.py
-│           ├── settings_dialog.py
-│           ├── themes
-│           │   ├── base.qss
-│           │   ├── dark.qss
-│           │   ├── __init__.py
-│           │   ├── light.qss
-│           │   └── theme_manager.py
-│           └── tooltips.py
-└── uv.lock
-```
+The monitoring implementation is layered for clarity and testability:
+
+- `services/monitor/probe.py`: Performs TCP connect attempts via `try_connect`
+- `services/monitor/engine.py`: Contains logic and returns a `CheckResult`
+- `ui/workers/monitor_thread.py`: Runs a `QThread` loop and emits results back to the UI
+- `core/monitor/state.py`: Tracks the state of the monitoring metrics
 
 ## Setup
 
 ### Option A: uv (Recommended)
 
 ```bash
-uv venv
-uv pip install -e .
+uv sync
+```
+
+Run with:
+```bash
+uv run network-monitor
 ```
 
 ### Option B: venv & pip
@@ -127,13 +107,13 @@ python -m network_monitor
 
 ## Roadmap
 
-- [x] Configurable target (host:port) and interval/timeout (implemented in [0.2.0](#020))
-- [x] Multiple state connectivity: Online/Offline/Unreachable (implemented in [0.5.0](#050))
+- [x] Configurable target (host:port) and interval/timeout (implemented in [v0.2.0](#v020))
+- [x] Multiple state connectivity: Online/Offline/Unreachable (implemented in [v0.5.0](#v050))
 - [x] UI polish (layout and visual indicators)
-- [x] Implement target method in settings (implemented in [0.6.0](#060))
-- [x] Tooltips for all metrics (more detailed informations) (implemented in [0.6.1](#061))
+- [x] Implement target method in settings (implemented in [v0.6.0](#v060))
+- [x] Tooltips for all metrics (more detailed informations) (implemented in [v0.6.1](#v061))
 - [ ] Click-to-copy full target (URL) from the server pill
-- [ ] Light/Dark themes (started implementation in [0.7.0](#070))
+- [ ] Light/Dark themes (started implementation in [v0.7.0](#v070))
 - [ ] Taskbar Functionality
 - [ ] Ability to resize application window
 - [ ] Disconnect debounce (reduce false disconnects)
@@ -144,15 +124,15 @@ python -m network_monitor
 
 ## Bugs (fixed)
 
-- [x] Statistics keep resetting on status change (fixed in [0.3.1](#031))
-- [x] Disconnects aren't being incremented/tracked (fixed in [0.3.2](#032))
-- [x] When changing interval checks and timeout checks, the current phase resets (fixed in [0.4.0](#040))
+- [x] Statistics keep resetting on status change (fixed in [v0.3.1](#v031))
+- [x] Disconnects aren't being incremented/tracked (fixed in [v0.3.2](#v032))
+- [x] When changing interval checks and timeout checks, the current phase resets (fixed in [v0.4.0](#v040))
 
 ## Changelog
-### 0.1.0
+### v0.1.0
 Initial working GUI with TCP connectivity checks (`1.1.1.1:443`) and basic network statistics.
 
-### 0.2.0
+### v0.2.0
 Added a settings dialog to configure the target:
 - Server IP
 - Port
@@ -163,7 +143,7 @@ Added selectable monitoring parameters:
 
 Settings persist between launches.
 
-### 0.3.0
+### v0.3.0
 Fixed an issue where configurations weren't persistent.
 
 Improved UI
@@ -171,32 +151,32 @@ Improved UI
 - Statistics are now in green, pills
 - Tightened the spacing surrounding the settings button and status
 
-### 0.3.1
+### v0.3.1
 Fixed issue where the metrics were being reset to default when changing settings.
 
-### 0.3.2
+### v0.3.2
 Fixed issue where disconnects wasn't functioning properly.
 
-### 0.3.3
+### v0.3.3
 Disconnect severity coloring:
 - 0: Green
 - 1 - 9: Yellow
 - 10+: Red
 
-### 0.3.4
-Similar to [0.3.3](#033), latency severity coloring:
+### v0.3.4
+Similar to [v0.3.3](#v033), latency severity coloring:
 - <100ms: Green
 - 100 - 199ms: Yellow
 - 200+ms: Red
 
-### 0.3.5
+### v0.3.5
 Layout refactor and additional UI polishing.
 
-### 0.4.0
+### v0.4.0
 Fixed issue where the uptime/downtime was resetting when changing endpoints.
 - Phase timers are now preserved on setting change
 
-### 0.5.0
+### v0.5.0
 Added a third connectivity state: `Unreachable`
 - Uses a fallback probe to distinguish `Offline` (no internet connectivity) from `Unreachable` (internet is stable, target is the issue)
 
@@ -209,7 +189,7 @@ Updated UI and styling to support the **Server Unreachable** state
 
 Added a status tooltip (hover) with extra details
 
-### 0.6.0
+### v0.6.0
 Added
 - Target Method selection in Settings: **IP Adress, Hostname, or URL**
 - Hostname input now supports `host[:port]` (port defaults to 443 if omitted)
@@ -226,7 +206,7 @@ Fixed
 - Prevented long hostnames from breaking the layout
 - Improved target validation in settings
 
-### 0.6.1
+### v0.6.1
 Added
 - Shared tooltip system for the UI (`tooltips.py`) with centralized tooltip text for both the monitor metrics and the settings fields.
 - Hover tooltips across the monitor view and settins dialog for cleaner, in-application explanations.
@@ -239,7 +219,7 @@ Changed
 Fixed
 - Hostname targets no longer incorrectly require a `.` to be considered valid (e.g., `romanjay-srv` now works).
 
-### 0.7.0
+### v0.7.0
 Added
 - Theme System:
     - `base.qss`: Shared structure/layout
@@ -256,7 +236,7 @@ Changed
 - Consistent pill styling
     - Application only has a dark theme at the moment
 
-### 0.7.1
+### v0.7.1
 Changed
 - Settings Dialog:
     - Redesigned the layout into section "cards" (Target/Check Interval/Timeout)
@@ -272,7 +252,7 @@ Fixed
     - Made monitor loop stop-aware (checks during probes and interruptible sleep)
     - Improved timeout detection for socket connections
 
-### 0.7.2
+### v0.7.2
 Changed
 - Settings Dialog:
     - Added styling and colors
@@ -284,3 +264,17 @@ Fixed
     - Fixed issue where custom arrows weren't clickable unless option was explicitly selected
     - Fixed issue where clickable area for custom arrows was not lining up correctly
     - Radio buttons weren't completely solid
+
+### v0.8.0
+Changed
+- Major internal refactor (architecture/maintainability):
+    - Monitoring logic split into `services/monitor/probe.py` (TCP connect) and `services/monitor/engine.py` (connectivity)
+    - Qt worker thread moved to `ui/workers/monitor_thread.py`
+    - Monitor domain state moved under `core/monitor/`
+    - Settings persistence isolated in `persistence/settings_store.py`
+    - UI reorganized into `dialogs/`, `views/`, `widgets/`, `workers/`, and `themes/`
+- Cleaner imports using `__init__p.y` re-exports across packages
+
+Notes
+- No intended user-facing behavior changes
+- Internal refactoring for long-term maintainability
