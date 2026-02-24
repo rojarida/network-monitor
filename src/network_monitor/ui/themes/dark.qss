@@ -54,6 +54,18 @@ QLabel#metric_value[kind="pill"] {
   color: #AAAAAA;
 }
 
+/* Keep total uptime green (for now) */
+QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="uptime"] {
+  background: #1C4700;
+  color: #AAAAAA;
+}
+
+/* Keep total downtime red (for now) */
+QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="downtime"] {
+  background: #590000;
+  color: #AAAAAA;
+}
+
 /* When status is DOWN, change pills to red */
 QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"] {
   background: #590000;
@@ -69,18 +81,6 @@ QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"] {
 /* Keep server pill blue */
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="server"] {
   background: #003075;
-  color: #AAAAAA;
-}
-
-/* Keep total uptime green (for now) */
-QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="uptime"] {
-  background: #1C4700;
-  color: #AAAAAA;
-}
-
-/* Keep total downtime red (for now) */
-QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="downtime"] {
-  background: #590000;
   color: #AAAAAA;
 }
 
