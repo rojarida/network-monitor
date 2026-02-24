@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import ipaddress
 
-from PySide6.QtCore import Qt, QObject, QEvent
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame,
     QButtonGroup,
     QDialog,
     QDialogButtonBox,
-    QAbstractSpinBox,
-    QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
     QGridLayout,
@@ -38,19 +36,7 @@ from network_monitor.persistence.settings_store import (
     SettingsData,
     SettingsDialogState,
 )
-
-
-class CheckRadioOnInteractFilter(QObject):
-    def __init__(self, radio_button: QRadioButton, parent: QObject | None = None) -> None:
-        super().__init__(parent)
-        self._radio_button = radio_button
-
-    def eventFilter(self, watched, event) -> bool:
-        if event.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.FocusIn):
-            if not self._radio_button.isChecked():
-                self._radio_button.setChecked(True)
-
-        return False
+from network_monitor.ui.widgets.seconds_group import SecondsGroup
 
 
 class SettingsDialog(QDialog):
@@ -58,7 +44,6 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self._settings_store = settings_store
 
-        self._event_filters: list[QObject] = []
         self.setWindowTitle("Settings")
         self.setFixedSize(650, 500)
         self.setObjectName("settings_dialog")
@@ -250,28 +235,17 @@ class SettingsDialog(QDialog):
         # Radio groups for interval/timeout (presets and custom)
         preset_values_seconds = [1.0, 2.0, 5.0]
 
-        (
-            interval_body,
-            self.interval_button_group,
-            self.interval_custom_radio_button,
-            self.interval_custom_spin_box,
-        ) = self._build_seconds_radio_group(
-            preset_values=preset_values_seconds,
-            custom_tooltip_key="custom_interval",
+        self.interval_group = SecondsGroup(
+            preset_values_seconds,
+            tooltip_text=SETTINGS_TOOLTIPS.get("custom_interval", "")
+        )
+        self.timeout_group = SecondsGroup(
+            preset_values_seconds,
+            tooltip_text=SETTINGS_TOOLTIPS.get("custom_timeout", "")
         )
 
-        (
-            timeout_body,
-            self.timeout_button_group,
-            self.timeout_custom_radio_button,
-            self.timeout_custom_spin_box,
-        ) = self._build_seconds_radio_group(
-            preset_values=preset_values_seconds,
-            custom_tooltip_key="custom_timeout",
-        )
-
-        self.interval_section = self._make_titled_card("Check Interval", interval_body, "interval_card")
-        self.timeout_section = self._make_titled_card("Timeout Interval", timeout_body, "timeout_card")
+        self.interval_section = self._make_titled_card("Check Interval", self.interval_group, "interval_card")
+        self.timeout_section = self._make_titled_card("Timeout Interval", self.timeout_group, "timeout_card")
 
         self.validation_label = QLabel()
         self.validation_label.setObjectName("validation_label")
@@ -346,12 +320,13 @@ class SettingsDialog(QDialog):
 
         # Signals
         self.target_method_group.idToggled.connect(self._on_target_method_changed)
-
         self.ip_target_line_edit.textChanged.connect(self._update_validation_ui)
         self.hostname_target_line_edit.textChanged.connect(self._update_validation_ui)
         self.url_target_line_edit.textChanged.connect(self._update_validation_ui)
-
         self.ip_port_spin_box.valueChanged.connect(self._update_validation_ui)
+        self.interval_group.changed.connect(self._update_validation_ui)
+        self.timeout_group.changed.connect(self._update_validation_ui)
+
 
         self._load_settings()
 
@@ -417,152 +392,6 @@ class SettingsDialog(QDialog):
 
         return section
 
-
-    def _build_seconds_radio_group(
-        self,
-        preset_values: list[float],
-        *,
-        custom_tooltip_key: str | None = None,
-    ) -> tuple[QWidget, QButtonGroup, QRadioButton, QDoubleSpinBox]:
-        body = QWidget()
-
-        # Vertical root. Presets on the top, custom on the bottom
-        root_layout = QVBoxLayout(body)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.setSpacing(10)
-        
-        button_group = QButtonGroup(self)
-
-        # Top row: Preset radio buttons
-        presets_widget = QWidget()
-        presets_widget.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
-        presets_layout = QHBoxLayout(presets_widget)
-        presets_layout.setContentsMargins(0, 0, 0, 0)
-        presets_layout.setSpacing(10)
-
-        presets_center = QWidget()
-        presets_center_layout = QHBoxLayout(presets_center)
-        presets_center_layout.setContentsMargins(0, 0, 0, 0)
-        presets_center_layout.setSpacing(0)
-        presets_center_layout.addStretch(1)
-        presets_center_layout.addWidget(presets_widget)
-        presets_center_layout.addStretch(1)
-
-        for seconds_value in preset_values:
-            preset_radio_button = QRadioButton(f"{seconds_value:g} s")
-            preset_radio_button.setProperty("seconds_value", seconds_value)
-            preset_radio_button.setProperty("role", "preset_radio")
-            button_group.addButton(preset_radio_button)
-            presets_layout.addWidget(preset_radio_button)
-
-        # Bottom row: Custom radio and spinbox centered vertically
-        custom_widget = QWidget()
-        custom_widget.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
-        custom_layout = QHBoxLayout(custom_widget)
-        custom_layout.setContentsMargins(0, 0, 0, 0)
-        custom_layout.setSpacing(0)
-
-        custom_row = QWidget()
-        custom_row_layout = QHBoxLayout(custom_row)
-        custom_row_layout.setContentsMargins(0, 0, 0, 0)
-        custom_row_layout.setSpacing(0)
-
-        custom_radio_button = QRadioButton()
-        custom_radio_button.setProperty("role", "preset_radio")
-
-        custom_spin_box = QDoubleSpinBox()
-        custom_spin_box.setProperty("role", "custom_spin")
-        custom_spin_box.setRange(0.5, 60)
-        custom_spin_box.setDecimals(1)
-        custom_spin_box.setSingleStep(0.5)
-        custom_spin_box.setSuffix(" s")
-        custom_spin_box.setMaximumWidth(90)
-
-        # Keep enabled so it can be clicked/focused
-        custom_spin_box.setEnabled(True)
-        custom_spin_box.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-
-        # Start inactive
-        custom_spin_box.lineEdit().setReadOnly(True)
-        custom_spin_box.setProperty("inactive", True)
-        self._repolish(custom_spin_box)
-
-        def set_custom_active(active: bool) -> None:
-            # Active -> Editable and Arrows
-            # Inactive -> Muted but clickable
-            custom_spin_box.setProperty("inactive", not active)
-            custom_spin_box.lineEdit().setReadOnly(not active)
-            custom_spin_box.setButtonSymbols(
-                QAbstractSpinBox.ButtonSymbols.UpDownArrows
-            )
-            self._repolish(custom_spin_box)
-
-        custom_radio_button.toggled.connect(set_custom_active)
-
-        # If user clicks the spinbox, select custom automatically
-        spin_filter = CheckRadioOnInteractFilter(custom_radio_button, self)
-        custom_spin_box.installEventFilter(spin_filter)
-        self._event_filters.append(spin_filter)
-
-        custom_spin_box.valueChanged.connect(lambda _v: custom_radio_button.setChecked(True))
-
-        custom_center = QWidget()
-        custom_center_layout = QHBoxLayout(custom_center)
-        custom_center_layout.setContentsMargins(0, 0, 0, 0)
-        custom_center_layout.setSpacing(0)
-        custom_center_layout.addStretch(1)
-        custom_center_layout.addWidget(custom_widget)
-        custom_center_layout.addStretch(1)
-
-        if custom_tooltip_key:
-            tooltip_text = SETTINGS_TOOLTIPS.get(custom_tooltip_key, "")
-            apply_tooltip((custom_radio_button,), tooltip_text)
-            apply_tooltip((custom_spin_box,), tooltip_text)
-
-        button_group.addButton(custom_radio_button)
-
-        custom_row_layout.addWidget(custom_radio_button)
-        custom_row_layout.addWidget(custom_spin_box)
-
-        custom_layout.addWidget(custom_row, 0, Qt.AlignmentFlag.AlignHCenter)
-
-        # Combine the two columns
-        root_layout.addWidget(presets_center)
-        root_layout.addWidget(custom_center)
-        root_layout.addStretch(1)
-
-        # Default selection (1s if present, otherwise first preset)
-        default_set = False
-        for button in button_group.buttons():
-            preset_value = button.property("seconds_value")
-            if preset_value is not None and float(preset_value) == 1.0:
-                button.setChecked(True)
-                default_set = True
-                break
-
-        if not default_set and button_group.buttons():
-            button_group.buttons()[0].setChecked(True)
-
-        return body, button_group, custom_radio_button, custom_spin_box
-
-
-    def _selected_seconds(
-        self,
-        button_group: QButtonGroup,
-        custom_radio_button: QRadioButton,
-        custom_spin_box: QDoubleSpinBox,
-    ) -> float:
-        if custom_radio_button.isChecked():
-            return float(custom_spin_box.value())
-
-        checked_button = button_group.checkedButton()
-        if checked_button is None:
-            return 1.0
-
-        preset_value = checked_button.property("seconds_value")
-        return float(preset_value)
-
-
     def _centered_row(self, widget: QWidget) -> QWidget:
         wrapper = QWidget()
         layout = QHBoxLayout(wrapper)
@@ -574,33 +403,12 @@ class SettingsDialog(QDialog):
 
         return wrapper
 
-
-    def _set_seconds_group_value(
-        self,
-        button_group: QButtonGroup,
-        custom_radio_button: QRadioButton,
-        custom_spin_box: QDoubleSpinBox,
-        value: float,
-    ) -> None:
-        # If it matches a preset, select that preset
-        for button in button_group.buttons():
-            preset_value = button.property("seconds_value")
-            if preset_value is not None and float(preset_value) == float(value):
-                button.setChecked(True)
-                return
-
-        # Otherwise, select custom
-        custom_radio_button.setChecked(True)
-        custom_spin_box.setValue(float(value))
-
-
     def _current_method(self) -> str:
         if self.hostname_method_radio_button.isChecked():
             return METHOD_HOSTNAME
         if self.url_method_radio_button.isChecked():
             return METHOD_URL
         return METHOD_IP
-
 
     def _on_target_method_changed(self, *_: object) -> None:
         method = self._current_method()
@@ -645,19 +453,8 @@ class SettingsDialog(QDialog):
         self.hostname_target_line_edit.setText(dialog_state.hostname)
         self.url_target_line_edit.setText(dialog_state.url)
 
-        # Interval/Timeout
-        self._set_seconds_group_value(
-            self.interval_button_group,
-            self.interval_custom_radio_button,
-            self.interval_custom_spin_box,
-            float(settings.interval_seconds),
-        )
-        self._set_seconds_group_value(
-            self.timeout_button_group,
-            self.timeout_custom_radio_button,
-            self.timeout_custom_spin_box,
-            float(settings.timeout_seconds)
-        )
+        self.interval_group.set_seconds(settings.interval_seconds)
+        self.timeout_group.set_seconds(settings.timeout_seconds)
 
         self._clear_invalid_markers()
         self._ensure_default_target_for_method()
@@ -762,17 +559,8 @@ class SettingsDialog(QDialog):
             QMessageBox.critical(self, "Invalid target", str(exc))
             return
 
-        interval_seconds = self._selected_seconds(
-            self.interval_button_group,
-            self.interval_custom_radio_button,
-            self.interval_custom_spin_box,
-        )
-        
-        timeout_seconds = self._selected_seconds(
-            self.timeout_button_group,
-            self.timeout_custom_radio_button,
-            self.timeout_custom_spin_box,
-        )
+        interval_seconds = self.interval_group.seconds()
+        timeout_seconds = self.timeout_group.seconds()
 
         # Store raw target text for the chosen method
         if state.method == METHOD_IP:
