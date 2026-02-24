@@ -110,6 +110,9 @@ class SecondsGroup(QWidget):
         # Keep enabled so it can be clicked/focused
         self.custom_spin_box.setEnabled(True)
         self.custom_spin_box.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.custom_spin_box.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.UpDownArrows)
+
+        self.custom_spin_box.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         # Start inactive (muted but clickable)
         self.custom_spin_box.lineEdit().setReadOnly(True)

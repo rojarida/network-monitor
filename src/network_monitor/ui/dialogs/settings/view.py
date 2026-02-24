@@ -46,6 +46,15 @@ class SettingsDialogView(QWidget):
         self.button_box.accepted.connect(self.accepted)
         self.button_box.rejected.connect(self.rejected)
 
+        save_button = self.button_box.button(QDialogButtonBox.StandardButton.Save)
+        cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+
+        if save_button is not None:
+            save_button.setObjectName("save_button")
+
+        if cancel_button is not None:
+            cancel_button.setObjectName("cancel_button")
+
         root_layout = QGridLayout(self)
         root_layout.setContentsMargins(12, 12, 12, 12)
         root_layout.setHorizontalSpacing(12)
@@ -56,6 +65,10 @@ class SettingsDialogView(QWidget):
         root_layout.addWidget(self.timeout_section, 1, 1)
         root_layout.setColumnStretch(0, 1)
         root_layout.setColumnStretch(1, 1)
+        root_layout.setRowStretch(0, 0)
+        root_layout.setRowStretch(1, 0)
+        root_layout.setRowStretch(2, 1)
+        root_layout.setRowStretch(3, 0)
         root_layout.addWidget(self.validation_label, 2, 0, 1, 2)
         root_layout.addWidget(self.button_box, 3, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignRight)
 

@@ -199,7 +199,7 @@ class TargetSection(QWidget):
         inputs_wrapper_layout.setSpacing(0)
         inputs_wrapper_layout.addWidget(self.target_stack_widget)
 
-        root_layout.addWidget(inputs_wrapper, 1, Qt.AlignmentFlag.AlignVCenter)
+        root_layout.addWidget(inputs_wrapper, 1)
 
         # Signals
         self.target_method_group.idToggled.connect(self._on_target_method_changed)
