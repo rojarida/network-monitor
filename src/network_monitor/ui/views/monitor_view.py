@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from typing import Any
-from urllib.parse import urlsplit
-
 from PySide6.QtGui import QFontMetrics, QPainter, QPalette
-from PySide6.QtCore import QTimer, Signal, Qt, QSettings
+from PySide6.QtCore import QTimer, Signal, Qt
 from PySide6.QtWidgets import (
     QWidget, 
     QLabel, 
@@ -17,9 +14,9 @@ from PySide6.QtWidgets import (
     QStyleOption,
 )
 
+from network_monitor.persistence.settings_store import SettingsData
 from network_monitor.services.monitor.thread import MonitorThread
 from network_monitor.services.monitor.state import MonitorState, CheckResult
-from network_monitor.ui.dialogs.settings.dialog import MonitorConfig
 from network_monitor.ui.help.tooltips import (
     METRIC_TOOLTIPS,
     apply_tooltip,
@@ -51,12 +48,9 @@ class ElidedLabel(QLabel):
         self._elide_mode = elide_mode
         self.setWordWrap(False)
 
-
     def setText(self, text: str) -> None:
         super().setText(text)
-        self.setToolTip(text)
         self.update()
-
 
     def paintEvent(self, event) -> None:
         option = QStyleOption()
@@ -80,15 +74,12 @@ class MonitorView(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._stopping_threads: list[MonitorThread] = []
+        self._settings: SettingsData | None = None
 
         self.setObjectName("monitor_view")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
-        startup_config = MonitorConfig.load()
-        self.monitor_state = MonitorState(
-            server=startup_config.server,
-            port=startup_config.port,
-        )
+        self.monitor_state = MonitorState(server="google.com", port=443)
         self.monitor_state.start()
 
         root_layout = QVBoxLayout(self)
@@ -164,164 +155,40 @@ class MonitorView(QWidget):
         root_layout.addWidget(stats_container)
 
         # Monitor thread and UI refresh
-        self.monitor_thread = MonitorThread(
-            server=startup_config.server,
-            port=startup_config.port,
-            interval_s=startup_config.interval_s,
-            timeout_s=startup_config.timeout_s,
-        )
-
-        self.monitor_thread.result.connect(self.on_check_result)
-        self.monitor_thread.start()
+        self.monitor_thread: MonitorThread | None = None
 
         self.ui_refresh_timer = QTimer(self)
         self.ui_refresh_timer.setInterval(250)
         self.ui_refresh_timer.timeout.connect(self.refresh_labels)
         self.ui_refresh_timer.start()
 
+    def apply_settings(self, settings: SettingsData) -> None:
+        """Apply settings and restart monitor thread"""
+        self._settings = settings
+        self._stop_monitor_thread(blocking=False)
 
-    def _make_separator(self, name: str) -> QFrame:
-        line = QFrame()
-        line.setObjectName(name)
-        line.setFrameShape(QFrame.Shape.NoFrame)
-        line.setFixedHeight(1)
-        line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        # Update state endpoint
+        self.monitor_state.set_endpoint(settings.host, settings.port)
 
-        return line
+        # Restart thread with new configuration
+        self.monitor_thread = MonitorThread(
+            server=settings.host,
+            port=settings.port,
+            interval_s=settings.interval_seconds,
+            timeout_s=settings.timeout_seconds,
+        )
 
+        self.monitor_thread.result.connect(self.on_check_result)
+        self.monitor_thread.start()
 
-    def _tooltip_key(self, label_text: str) -> str:
-        return label_text.strip().casefold().replace(" ", "_")
+        # Update UI from settings
+        self.server_value.setText(settings.display_target)
+        self.server_value.setToolTip(settings.full_target)
 
-
-    def _make_metric_row(
-        self,
-        key_text: str,
-        *,
-        center_value: bool = False,
-        value_object_name: str = "metric_value") -> tuple[QWidget, QLabel, QLabel]:
-        row = QWidget()
-        row.setObjectName("metric_row")
-        row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-        layout = QHBoxLayout(row)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
-
-        key_label = QLabel(key_text)
-        key_label.setObjectName("metric_key")
-
-        value_label = ElidedLabel() if key_text == "Server" else QLabel("-")
-        value_label.setObjectName(value_object_name)
-        value_label.setProperty("kind", "pill")
-
-        if key_text == "Server":
-            value_label.setProperty("metric", "server")
-            value_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-
-        if center_value:
-            key_label.hide()
-            layout.addStretch(1)
-            layout.addWidget(value_label, 0)
-            layout.addStretch(1)
-        else:
-            layout.addWidget(key_label, 1)
-            layout.addWidget(value_label, 0)
-
-        tooltip_key = self._tooltip_key(key_text)
-        tooltip_text = METRIC_TOOLTIPS.get(tooltip_key, "")
-        apply_tooltip((key_label,), tooltip_text)
-
-        return row, key_label, value_label
-
-
-    def _repolish(self, widget: QWidget) -> None:
-        widget.style().unpolish(widget)
-        widget.style().polish(widget)
-        widget.update()
-
-
-    def on_check_result(self, result_object: object) -> None:
-        if not isinstance(result_object, CheckResult):
-            return
-        self.monitor_state.apply(result_object)
+        self.status_label.setText("...")
+        self.status_label.setProperty("status", "unknown")
+        self._repolish(self.status_label)
         self.refresh_labels()
-
-
-    def _get_setting_str(self, settings: QSettings, key: str, default: str = "") -> str:
-        value: Any = settings.value(key, default)
-        if value is None:
-            return default
-        return value if isinstance(value, str) else str(value)
-
-
-    def _format_host_port(self, host: str, port: int) -> str:
-        # Bracket IPv6 when showing host:port
-        if ":" in host and not host.startswith("["):
-            return f"[{host}]:{port}"
-        return f"{host}:{port}"
-
-
-    def _compute_full_target_tooltip(self) -> str:
-        settings = QSettings()
-        full_target = self._get_setting_str(settings, "endpoint/full_target", "").strip()
-        if full_target:
-            return full_target
-
-        # Fallback
-        host = self.monitor_state.server
-        port = self.monitor_state.port
-        return self._compute_display_target(host, port)
-
-
-    def _compute_display_target(self, host: str, port: int) -> str:
-        settings = QSettings()
-
-        # Preferred: Use exact display saved by SettingsDialog
-        saved_display = self._get_setting_str(settings, "endpoint/display_target", "").strip()
-        if saved_display:
-            return saved_display
-
-        # Fallback
-        method = self._get_setting_str(settings, "endpoint/method", "")
-
-        # Target method is IP
-        if method == "ip":
-            return self._format_host_port(host, port)
-
-        # Target method is hostname
-        if method == "hostname":
-            hostname = self._get_setting_str(settings, "endpoint/hostname_text", "").strip()
-            explicit_port = False
-
-            if hostname.startswith("["):
-                closing = hostname.find("]")
-                if closing != -1:
-                    remainder = hostname[closing + 1 :].strip()
-                    if remainder.startswith(":") and remainder[1:].strip().isdigit():
-                        explicit_port = True
-            else:
-                if ":" in hostname:
-                    possible_host, possible_port = hostname.rsplit(":", 1)
-                    if possible_port.isdigit():
-                        explicit_port = True
-
-            return self._format_host_port(host, port) if explicit_port else host
-
-        # Target method is URL
-        if method == "url":
-            raw = self._get_setting_str(settings, "endpoint/url_text", "").strip()
-            if raw:
-                url_text = raw if "://" in raw else f"https://{raw}"
-                parts = urlsplit(url_text)
-                explicit_port = parts.port is not None
-                return self._format_host_port(host, port) if explicit_port else host
-            
-            return host
-        
-        # Unknown method
-        return self._format_host_port(host, port)
-
 
     def refresh_labels(self) -> None:
         last_status = self.monitor_state.last_status
@@ -367,16 +234,13 @@ class MonitorView(QWidget):
             self.phase_label.setText(phase_text)
 
         # Server
-        server_text = self._compute_display_target(self.monitor_state.server, self.monitor_state.port)
-        if self.server_value.text() != server_text:
-            self.server_value.setText(server_text)
+        if self._settings is not None:
+            if self.server_value.text() != self._settings.display_target:
+                self.server_value.setText(self._settings.display_target)
 
-        full_target = self._compute_full_target_tooltip()
-        tooltip_text = f"{full_target}\n\n Click to copy full URL"
-
-        # Update tooltip
-        if self.server_value.toolTip() != tooltip_text:
-            self.server_value.setToolTip(tooltip_text)
+            desired_tooltip = self._settings.full_target
+            if self.server_value.toolTip() != desired_tooltip:
+                self.server_value.setToolTip(desired_tooltip)
 
         # Latency
         latency_ms = self.monitor_state.last_latency_ms
@@ -424,30 +288,68 @@ class MonitorView(QWidget):
         current_phase_seconds = self.monitor_state.current_phase_seconds()
         self.phase_value.setText(format_seconds_as_hhmmss(current_phase_seconds))
 
+    def _make_separator(self, name: str) -> QFrame:
+        line = QFrame()
+        line.setObjectName(name)
+        line.setFrameShape(QFrame.Shape.NoFrame)
+        line.setFixedHeight(1)
+        line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-    def apply_config(self, config: MonitorConfig) -> None:
-        self._stop_monitor_thread(blocking=False)
+        return line
 
-        self.monitor_state.set_endpoint(config.server, config.port)
+    def _tooltip_key(self, label_text: str) -> str:
+        return label_text.strip().casefold().replace(" ", "_")
 
-        # Restart thread with new configuration
-        self.monitor_thread = MonitorThread(
-            server=config.server,
-            port=config.port,
-            interval_s=config.interval_s,
-            timeout_s=config.timeout_s,
-        )
+    def _make_metric_row(
+        self,
+        key_text: str,
+        *,
+        center_value: bool = False,
+        value_object_name: str = "metric_value") -> tuple[QWidget, QLabel, QLabel]:
+        row = QWidget()
+        row.setObjectName("metric_row")
+        row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        self.monitor_thread.result.connect(self.on_check_result)
-        self.monitor_thread.start()
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
 
-        # Update label
-        self.server_value.setText(self._compute_display_target(config.server, config.port))
-        self.status_label.setText("...")
-        self.status_label.setProperty("status", "unknown")
-        self._repolish(self.status_label)
+        key_label = QLabel(key_text)
+        key_label.setObjectName("metric_key")
+
+        value_label = ElidedLabel() if key_text == "Server" else QLabel("-")
+        value_label.setObjectName(value_object_name)
+        value_label.setProperty("kind", "pill")
+
+        if key_text == "Server":
+            value_label.setProperty("metric", "server")
+            value_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+
+        if center_value:
+            key_label.hide()
+            layout.addStretch(1)
+            layout.addWidget(value_label, 0)
+            layout.addStretch(1)
+        else:
+            layout.addWidget(key_label, 1)
+            layout.addWidget(value_label, 0)
+
+        tooltip_key = self._tooltip_key(key_text)
+        tooltip_text = METRIC_TOOLTIPS.get(tooltip_key, "")
+        apply_tooltip((key_label,), tooltip_text)
+
+        return row, key_label, value_label
+
+    def _repolish(self, widget: QWidget) -> None:
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
+        widget.update()
+
+    def on_check_result(self, result_object: object) -> None:
+        if not isinstance(result_object, CheckResult):
+            return
+        self.monitor_state.apply(result_object)
         self.refresh_labels()
-
 
     def _stop_monitor_thread(self, *, blocking: bool = False) -> None:
         thread = getattr(self, "monitor_thread", None)
@@ -483,7 +385,6 @@ class MonitorView(QWidget):
             thread.finished.connect(_cleanup)
 
         self.monitor_thread = None
-
 
     def shutdown(self) -> None:
         if getattr(self, "ui_refresh_timer", None):

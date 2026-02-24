@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication
 
 from network_monitor.ui.main_window import MainWindow
 from network_monitor.ui.themes.manager import ThemeManager
+from network_monitor.persistence.settings_store import SettingsStore
 
 
 def load_stylesheet(theme: str | None = None) -> str:
@@ -31,7 +32,12 @@ def main() -> int:
 
     # application.setStyleSheet(load_stylesheet())
 
-    window = MainWindow()
+    settings_store = SettingsStore()
+
+    window = MainWindow(
+        settings_store=settings_store,
+        theme_manager=theme_manager,
+    )
     window.show()
     return application.exec()
 

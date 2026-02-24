@@ -1,13 +1,8 @@
 from __future__ import annotations
 
 import ipaddress
-import re
 
-from urllib.parse import urlsplit
-from typing import Any
-from dataclasses import dataclass
-
-from PySide6.QtCore import QSettings, Qt, QObject, QEvent
+from PySide6.QtCore import Qt, QObject, QEvent
 from PySide6.QtWidgets import (
     QFrame,
     QButtonGroup,
@@ -31,154 +26,39 @@ from PySide6.QtWidgets import (
 )
 
 from network_monitor.ui.help.tooltips import SETTINGS_TOOLTIPS, apply_tooltip
-
-
-# Regex for handling URLs
-_HOSTNAME_RE = re.compile(
-    r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)"
-    r"(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*\.?$"
+from network_monitor.core.normalize_target import (
+    normalize_target,
+    format_host_port,
+    METHOD_IP,
+    METHOD_HOSTNAME,
+    METHOD_URL
+)
+from network_monitor.persistence.settings_store import (
+    SettingsStore,
+    SettingsData,
+    SettingsDialogState,
 )
 
 
 class CheckRadioOnInteractFilter(QObject):
-    def __init__(self, radio_button: QRadioButton, parent=None) -> None:
+    def __init__(self, radio_button: QRadioButton, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._radio_button = radio_button
 
-
-    def eventFilter(self, watched, event):
+    def eventFilter(self, watched, event) -> bool:
         if event.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.FocusIn):
-            if self._radio_button is not None and self._radio_button.isChecked():
+            if not self._radio_button.isChecked():
                 self._radio_button.setChecked(True)
 
         return False
 
 
-@dataclass(frozen=True)
-class NormalizedTarget:
-    host: str
-    port: int
-    display_target: str
-    full_target: str | None = None
-
-
-@dataclass(frozen=True)
-class MonitorConfig:
-    server: str
-    port: int
-    interval_s: float
-    timeout_s: float
-
-
-    def save(self) -> None:
-        settings = QSettings()
-        settings.setValue("endpoint/server", self.server)
-        settings.setValue("endpoint/port", self.port)
-        settings.setValue("monitor/interval_s", self.interval_s)
-        settings.setValue("monitor/timeout_s", self.timeout_s)
-        settings.sync()
-
-
-    @classmethod
-    def load(cls) -> "MonitorConfig":
-        settings = QSettings()
-
-        server_raw: Any = settings.value("endpoint/server", "1.1.1.1")
-        port_raw: Any = settings.value("endpoint/port", 443)
-        interval_raw: Any = settings.value("monitor/interval_s", 1.0)
-        timeout_raw: Any = settings.value("monitor/timeout_s", 1.0)
-
-        return cls(
-            server=str(server_raw),
-            port=int(port_raw),
-            interval_s=float(interval_raw),
-            timeout_s=float(timeout_raw)
-        )
-
-
-def parse_endpoint(raw_text: str, default_port: int) -> tuple[str, int]:
-    """
-    Accepts:
-        - IP=           1.1.1.1
-        - Hostname=     google.com, localhost
-        - Host:Port=    google.com:443, 1.1.1.1:443
-        - URL=          https://google.com, http://example.com:8080/path
-
-    Returns (host, port) normalized for a TCP socket.
-    """
-    text = raw_text.strip()
-    if not text:
-        raise ValueError("Endpoint is empty")
-
-    # Full URL (https://example.com or http://example.com:1234)
-    if "://" in text:
-        parts = urlsplit(text)
-        if not parts.hostname:
-            raise ValueError("Invalid URL")
-
-        host = parts.hostname
-        if parts.port is not None:
-            port = parts.port
-        else:
-            if parts.scheme == "https":
-                port = 443
-            elif parts.scheme == "http":
-                port = 80
-            else:
-                port = default_port
-
-        if not (1 <= int(port) <= 65535):
-            raise ValueError("Port out of range")
-
-        return host, int(port)
-
-    try:
-        ipaddress.ip_address(text)
-        if not (1 <= int(default_port) <= 65535):
-            raise ValueError("Port out of range")
-        return text, int(default_port)
-    except ValueError:
-        pass
-
-    # Host:Port
-    parts = urlsplit(f"dummy://{text}")
-    if not parts.hostname:
-        raise ValueError("Invalid target")
-
-    host = parts.hostname
-    port = parts.port if parts.port is not None else default_port
-
-    if not (1 <= int(port) <= 65535):
-        raise ValueError("Port out of range")
-
-    # Valdiate host (IP or hostname)
-    try:
-        ipaddress.ip_address(host)
-        return host, int(port)
-    except ValueError:
-        pass
-
-    try:
-        ascii_host = host.encode("idna").decode("ascii")
-    except Exception as exc:
-        raise ValueError("Invalid hostname") from exc
-
-    if not _HOSTNAME_RE.match(ascii_host.rstrip(".")):
-        raise ValueError("Invalid hostname")
-
-    return host, int(port)
-
-
 class SettingsDialog(QDialog):
-    METHOD_IP = "ip"
-    METHOD_HOSTNAME = "hostname"
-    METHOD_URL = "url"
-
-
-    def __init__(self, parent=None) -> None:
+    def __init__(self, settings_store: SettingsStore, parent=None) -> None:
         super().__init__(parent)
+        self._settings_store = settings_store
+
         self._event_filters: list[QObject] = []
-        self.settings: QSettings = QSettings()
         self.setWindowTitle("Settings")
         self.setFixedSize(650, 500)
         self.setObjectName("settings_dialog")
@@ -479,14 +359,14 @@ class SettingsDialog(QDialog):
     def _ensure_default_target_for_method(self) -> None:
         method = self._current_method()
 
-        if method == self.METHOD_IP and not self.ip_target_line_edit.text().strip():
+        if method == METHOD_IP and not self.ip_target_line_edit.text().strip():
             self.ip_target_line_edit.setText("1.1.1.1")
             self.ip_port_spin_box.setValue(443)
 
-        elif method == self.METHOD_HOSTNAME and not self.hostname_target_line_edit.text().strip():
+        elif method == METHOD_HOSTNAME and not self.hostname_target_line_edit.text().strip():
             self.hostname_target_line_edit.setText("google.com")
 
-        elif method == self.METHOD_URL and not self.url_target_line_edit.text().strip():
+        elif method == METHOD_URL and not self.url_target_line_edit.text().strip():
             self.url_target_line_edit.setText("https://google.com")
 
 
@@ -714,36 +594,19 @@ class SettingsDialog(QDialog):
         custom_spin_box.setValue(float(value))
 
 
-    def _get_setting_str(self, key: str, default: str = "") -> str:
-        value: Any = self.settings.value(key, default)
-        if value is None:
-            return default
-        return value if isinstance(value, str) else str(value)
-
-
-    def _get_setting_int(self, key: str, default: int) -> int:
-        value: Any = self.settings.value(key, default)
-        if value is None:
-            return default
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return default
-
-
     def _current_method(self) -> str:
         if self.hostname_method_radio_button.isChecked():
-            return self.METHOD_HOSTNAME
+            return METHOD_HOSTNAME
         if self.url_method_radio_button.isChecked():
-            return self.METHOD_URL
-        return self.METHOD_IP
+            return METHOD_URL
+        return METHOD_IP
 
 
-    def _on_target_method_changed(self) -> None:
+    def _on_target_method_changed(self, *_: object) -> None:
         method = self._current_method()
-        if method == self.METHOD_IP:
+        if method == METHOD_IP:
             self.target_stack_widget.setCurrentIndex(0)
-        elif method == self.METHOD_HOSTNAME:
+        elif method == METHOD_HOSTNAME:
             self.target_stack_widget.setCurrentIndex(1)
         else:
             self.target_stack_widget.setCurrentIndex(2)
@@ -754,53 +617,46 @@ class SettingsDialog(QDialog):
 
 
     def _load_settings(self) -> None:
-        config = MonitorConfig.load()
+        settings = self._settings_store.load_settings()
+        dialog_state = self._settings_store.load_dialog_state()
 
-        saved_method = self._get_setting_str("endpoint/method", "")
+        # If no raw inputs were ever saved, fall back to stored settings
+        if not dialog_state.ip_address and not dialog_state.hostname and not dialog_state.url:
+            inferred_method = settings.target_method or self._infer_method_from_server(settings.host)
+            dialog_state = SettingsDialogState(
+                method=inferred_method,
+                ip_address=settings.host if inferred_method == METHOD_IP else "",
+                ip_port=int(settings.port),
+                hostname=settings.target_text if inferred_method == METHOD_HOSTNAME else "",
+                url=settings.target_text if inferred_method == METHOD_URL else "", 
+            )
 
-        # Restore raw inputs
-        ip_text = self._get_setting_str("endpoint/ip_text", "")
-        hostname_text = self._get_setting_str("endpoint/hostname_text", "")
-        url_text = self._get_setting_str("endpoint/url_text", "")
-
-        if not ip_text and not hostname_text and not url_text:
-            # First Run / Older Config: Infer from saved server
-            inferred_method = self._infer_method_from_server(config.server)
-            saved_method = saved_method or inferred_method
-
-            if inferred_method == self.METHOD_IP:
-                self.ip_target_line_edit.setText(config.server)
-                self.ip_port_spin_box.setValue(int(config.port))
-            else:
-                self.hostname_target_line_edit.setText(config.server)
-
-        else:
-            self.ip_target_line_edit.setText(ip_text)
-            self.hostname_target_line_edit.setText(hostname_text)
-            self.url_target_line_edit.setText(url_text)
-        
-            self.ip_port_spin_box.setValue(int(self._get_setting_int("endpoint/ip_port", int(config.port))))
-
-        # Select method
-        if saved_method == self.METHOD_HOSTNAME:
+        # Target method
+        if dialog_state.method == METHOD_HOSTNAME:
             self.hostname_method_radio_button.setChecked(True)
-        elif saved_method == self.METHOD_URL:
+        elif dialog_state.method == METHOD_URL:
             self.url_method_radio_button.setChecked(True)
         else:
             self.ip_method_radio_button.setChecked(True)
+
+        # Restore raw inputs
+        self.ip_target_line_edit.setText(dialog_state.ip_address)
+        self.ip_port_spin_box.setValue(int(dialog_state.ip_port))
+        self.hostname_target_line_edit.setText(dialog_state.hostname)
+        self.url_target_line_edit.setText(dialog_state.url)
 
         # Interval/Timeout
         self._set_seconds_group_value(
             self.interval_button_group,
             self.interval_custom_radio_button,
             self.interval_custom_spin_box,
-            float(config.interval_s),
+            float(settings.interval_seconds),
         )
         self._set_seconds_group_value(
             self.timeout_button_group,
             self.timeout_custom_radio_button,
             self.timeout_custom_spin_box,
-            float(config.timeout_s)
+            float(settings.timeout_seconds)
         )
 
         self._clear_invalid_markers()
@@ -808,7 +664,16 @@ class SettingsDialog(QDialog):
         self._update_validation_ui()
 
 
-    def _update_validation_ui(self) -> None:
+    def _collect_dialog_state(self) -> SettingsDialogState:
+        return SettingsDialogState(
+            method=self._current_method(),
+            ip_address=self.ip_target_line_edit.text().strip(),
+            ip_port=int(self.ip_port_spin_box.value()),
+            hostname=self.hostname_target_line_edit.text().strip(),
+            url=self.url_target_line_edit.text().strip(),
+        )
+
+    def _update_validation_ui(self, *_: object) -> None:
         save_button = self.button_box.button(QDialogButtonBox.StandardButton.Save)
         if save_button is None:
             return
@@ -820,9 +685,16 @@ class SettingsDialog(QDialog):
         self.hostname_preview_label.setText("")
         self.url_preview_label.setText("")
 
+        state = self._collect_dialog_state()
+
         try:
-            normalized = self._normalized_target_from_ui(validate_only=True)
-            host, port = normalized.host, normalized.port
+            normalized = normalize_target(
+                state.method,
+                ip_address=state.ip_address,
+                ip_port=state.ip_port,
+                hostname=state.hostname,
+                url=state.url
+            )
         except ValueError as exc:
             self.validation_label.setText(str(exc))
             self.validation_label.setVisible(True)
@@ -830,204 +702,33 @@ class SettingsDialog(QDialog):
             save_button.setEnabled(False)
             return
 
-        if self._current_method() == self.METHOD_IP:
-            self.ip_preview_label.setText(f"Checking target: {host}:{port}")
-
-        if self._current_method() == self.METHOD_HOSTNAME:
-            self.hostname_preview_label.setText(f"Checking target: {host}:{port}")
-
-        # For URL, show the normalized connection target
-        if self._current_method() == self.METHOD_URL:
-            self.url_preview_label.setText(f"Checking target: {host}:{port}")
+        preview = f"Checking target: {format_host_port(normalized.host, normalized.port)}"
+        if state.method == METHOD_IP:
+            self.ip_preview_label.setText(preview)
+        elif state.method == METHOD_HOSTNAME:
+            self.hostname_preview_label.setText(preview)
+        else:
+            self.url_preview_label.setText(preview)
 
         save_button.setEnabled(True)
-
-
-    def _format_host_port(self, host: str, port: int) -> str:
-    # Bracket IPv6 when showing host:port
-        if ":" in host and not host.startswith("[") and host.count(":") >= 2:
-            return f"[{host}]:{port}"
-        return f"{host}:{port}"
-    
-
-    def _normalized_target_from_ui(self, validate_only: bool = False) -> NormalizedTarget:
-        method = self._current_method()
-
-        # Target method is IP
-        if method == self.METHOD_IP:
-            raw_ip_text = self.ip_target_line_edit.text().strip()
-            if not raw_ip_text:
-                raise ValueError("Please enter an IP address.")
-            ip_text = raw_ip_text.strip("[]") # Allow IPv6 style
-            try:
-                ipaddress.ip_address(ip_text)
-            except ValueError as exc:
-                raise ValueError("Please enter a valid IPv4 or IPv6 address.") from exc
-
-            port = int(self.ip_port_spin_box.value())
-            display_target = self._format_host_port(ip_text, port)
-
-            return NormalizedTarget(host=ip_text, port=port, display_target=display_target)
-
-        # Target method is hostname
-        if method == self.METHOD_HOSTNAME:
-            hostname = self.hostname_target_line_edit.text().strip()
-
-            if self._looks_like_url(hostname):
-                raise ValueError("Format is similar to URL. Switch Target Method to URL.")
-
-            host, port, explicit_port = self._parse_host_optional_port(hostname, default_port=443)
-
-            # Accept IPs as well
-            try:
-                ipaddress.ip_address(host.strip("[]"))
-                clean_ip = host.strip("[]")
-                display_target = clean_ip if not explicit_port else self._format_host_port(clean_ip, port)
-                return NormalizedTarget(host=clean_ip, port=port, display_target=display_target)
-            except ValueError:
-                pass
-
-            # Validate as hostname
-            try:
-                ascii_host = host.encode("idna").decode("ascii")
-            except Exception as exc:
-                raise ValueError("Invalid hostname.") from exc
-
-            # Normalize trailing dot
-            ascii_host = ascii_host.rstrip(".")
-
-            if not _HOSTNAME_RE.match(ascii_host.rstrip(".")):
-                raise ValueError(
-                    'Enter a hostname (e.g., "romanjay-srv or "google.com") or an IP address.\n'
-                    '"localhost" is permitted.'
-                )
-
-            display_target = host if not explicit_port else self._format_host_port(host, port)
-            return NormalizedTarget(host=host, port=port, display_target=display_target)
-
-
-        # Target method is URL
-        raw_url_text = self.url_target_line_edit.text().strip()
-        if not raw_url_text:
-            raise ValueError("Please enter a URL.")
-
-        # Allow scheme to be omitted (assume https)
-        url_text = raw_url_text if "://" in raw_url_text else f"https://{raw_url_text}"
-
-        try:
-            parts = urlsplit(url_text)
-        except Exception as exc:
-            raise ValueError("Please enter a valid URL.") from exc
-
-        if parts.scheme not in ("http", "https"):
-            raise ValueError('Only "http" and "https" URLs are supported.')
-
-        if not parts.hostname:
-            raise ValueError("Please enter a valid URL (must include a host).")
-
-        host = parts.hostname
-        explicit_port = False
-
-        try:
-            port = parts.port
-        except ValueError as exc:
-            raise ValueError("Invalid port in URL.") from exc
-
-        if port is None:
-            port = 80 if parts.scheme == "http" else 443
-        else:
-            explicit_port = True
-
-        if not (1 <= port <= 65535):
-            raise ValueError("Port out of range.")
-
-        display_target = host if not explicit_port else self._format_host_port(host, port)
-        return NormalizedTarget(host=host, port=port, display_target=display_target, full_target=url_text)
-
-
-    def _looks_like_url(self, text: str) -> bool:
-        stripped_text = text.strip()
-        if not stripped_text:
-            return False
-
-        # If it contains any of these, it's in the form of a URL
-        return (
-            "://" in stripped_text
-            or "/" in stripped_text
-            or "?" in stripped_text
-            or "#" in stripped_text
-        )
-
-
-    def _parse_host_optional_port(self, text: str, default_port: int = 443) -> tuple[str, int, bool]:
-        raw_text = text.strip()
-
-        if not raw_text:
-            raise ValueError("Please enter a hostname.")
-
-        explicit_port = False
-
-        # Handle IPv6 ([::1]:443)
-        if raw_text.startswith("["):
-            closing_index = raw_text.find("]")
-            if closing_index == -1:
-                raise ValueError("Invalid bracketed host. Example: [::1]:443")
-
-            host = raw_text[1:closing_index].strip()
-            remainder = raw_text[closing_index + 1 :].strip()
-
-            if remainder.startswith(":"):
-                port_text = remainder[1:].strip()
-                if not port_text.isdigit():
-                    raise ValueError("Port must be a number (1 - 65535).")
-                port = int(port_text)
-                explicit_port = True
-            else:
-                port = default_port
-
-            if not (1 <= port <= 65535):
-                raise ValueError("Port must be in the range 1 - 65535")
-
-            return host, port, explicit_port
-
-        # Normal hostname with optional port
-        host = raw_text
-        port = default_port
-
-        if ":" in raw_text:
-            possible_host, possible_port = raw_text.rsplit(":", 1)
-            if possible_port.isdigit():
-                host = possible_host.strip()
-                port = int(possible_port)
-                explicit_port = True
-
-        if not host:
-            raise ValueError("Hostname cannot be empty.")
-        if not (1 <= port <= 65535):
-            raise ValueError("Port must be in the range 1 - 65535")
-
-        return host, port, explicit_port
-
 
     def _infer_method_from_server(self, server: str) -> str:
         try:
             ipaddress.ip_address(server.strip("[]"))
-            return self.METHOD_IP
+            return METHOD_IP
         except ValueError:
-            return self.METHOD_HOSTNAME
-
+            return METHOD_HOSTNAME
 
     def _clear_invalid_markers(self) -> None:
         for widget in (self.ip_target_line_edit, self.hostname_target_line_edit, self.url_target_line_edit):
             widget.setProperty("invalid", False)
             self._repolish(widget)
 
-
     def _mark_activate_input_invalid(self) -> None:
         method = self._current_method()
-        if method == self.METHOD_IP:
+        if method == METHOD_IP:
             active_widget = self.ip_target_line_edit
-        elif method == self.METHOD_HOSTNAME:
+        elif method == METHOD_HOSTNAME:
             active_widget = self.hostname_target_line_edit
         else:
             active_widget = self.url_target_line_edit
@@ -1047,44 +748,52 @@ class SettingsDialog(QDialog):
         if save_button is not None and not save_button.isEnabled():
             return
 
+        state = self._collect_dialog_state()
+
         try:
-            normalized = self._normalized_target_from_ui()
+            normalized = normalize_target(
+                state.method,
+                ip_address=state.ip_address,
+                ip_port=state.ip_port,
+                hostname=state.hostname,
+                url=state.url,
+            )
         except ValueError as exc:
             QMessageBox.critical(self, "Invalid target", str(exc))
             return
 
-        interval_s = self._selected_seconds(
+        interval_seconds = self._selected_seconds(
             self.interval_button_group,
             self.interval_custom_radio_button,
             self.interval_custom_spin_box,
         )
         
-        timeout_s = self._selected_seconds(
+        timeout_seconds = self._selected_seconds(
             self.timeout_button_group,
             self.timeout_custom_radio_button,
             self.timeout_custom_spin_box,
         )
 
-        # Persist raw UI state
-        method = self._current_method()
-        full_target = normalized.full_target
-        if method != self.METHOD_URL:
-            full_target = None
+        # Store raw target text for the chosen method
+        if state.method == METHOD_IP:
+            target_text = state.ip_address
+        elif state.method == METHOD_HOSTNAME:
+            target_text = state.hostname
+        else:
+            target_text = state.url
 
-        self.settings.setValue("endpoint/method", method)
-        self.settings.setValue("endpoint/ip_text", self.ip_target_line_edit.text().strip())
-        self.settings.setValue("endpoint/ip_port", self.ip_port_spin_box.value())
-        self.settings.setValue("endpoint/hostname_text", self.hostname_target_line_edit.text().strip())
-        self.settings.setValue("endpoint/url_text", self.url_target_line_edit.text().strip())
-        self.settings.setValue("endpoint/display_target", normalized.display_target)
-        self.settings.setValue("endpoint/full_target", full_target)
-
-        config = MonitorConfig(
-            server=normalized.host,
+        settings = SettingsData(
+            target_method=state.method,
+            target_text=target_text,
+            host=normalized.host,
             port=int(normalized.port),
-            interval_s=float(interval_s),
-            timeout_s=float(timeout_s),
+            display_target=normalized.display_target,
+            full_target=normalized.full_target,
+            port_was_explicit=normalized.port_was_explicit,
+            interval_seconds=float(interval_seconds),
+            timeout_seconds=float(timeout_seconds),
         )
 
-        config.save()
+        self._settings_store.save_dialog_state(state)
+        self._settings_store.save_settings(settings)
         self.accept()
