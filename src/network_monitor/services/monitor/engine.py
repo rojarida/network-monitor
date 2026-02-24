@@ -4,13 +4,13 @@ import time
 from collections.abc import Callable
 
 from network_monitor.core.monitor import CheckResult
-from network_monitor.services.monitor import try_connect
+from .probe import try_connect
 
 
-DEFAULT_PROBE_ENDPOINTS: list[tuple[str, int]] = [
+DEFAULT_PROBE_ENDPOINTS: tuple[tuple[str, int], ...] = (
     ("1.1.1.1", 443),
     ("1.0.0.1", 443),
-]
+)
 
 
 def check_once(
@@ -18,7 +18,7 @@ def check_once(
     port: int,
     timeout_seconds: float,
     *,
-    probe_endpoints: list[tuple[str, int]] = DEFAULT_PROBE_ENDPOINTS,
+    probe_endpoints: tuple[tuple[str, int], ...] = DEFAULT_PROBE_ENDPOINTS,
     should_stop: Callable[[], bool] | None = None,
 ) -> CheckResult:
     def stopping() -> bool:
@@ -29,21 +29,12 @@ def check_once(
         server, port, timeout_seconds
     )
 
-    if stopping():
-        # Still return something reasonable
-        return CheckResult(
-            status="offline",
-            latency_ms=None,
-            timestamp=time.monotonic(),
-            error_kind="oserror"
-        )
-
     if target_ok:
         return CheckResult(
             status="online",
             latency_ms=target_latency_ms,
             timestamp=time.monotonic(),
-            error_kind=None
+            error_kind=None,
         )
 
     # Probes (stop-aware)
@@ -61,5 +52,5 @@ def check_once(
         status=status,
         latency_ms=None,
         timestamp=time.monotonic(),
-        error_kind=target_error_kind
+        error_kind=target_error_kind,
     )

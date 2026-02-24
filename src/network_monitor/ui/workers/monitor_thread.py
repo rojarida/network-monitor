@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QThread, Signal
 
-from network_monitor.services.monitor import check_once
+from network_monitor.services.monitor.engine import check_once
 
 if TYPE_CHECKING:
     from network_monitor.core.monitor import CheckResult
