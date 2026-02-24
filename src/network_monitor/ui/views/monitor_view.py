@@ -15,9 +15,9 @@ from PySide6.QtWidgets import (
 )
 
 from network_monitor.core.models import SettingsData
-from network_monitor.services.monitor.thread import MonitorThread
+from network_monitor.ui.workers import MonitorThread
 from network_monitor.core.monitor import MonitorState, CheckResult
-from network_monitor.ui.help.tooltips import (
+from network_monitor.ui.help import (
     METRIC_TOOLTIPS,
     apply_tooltip,
     status_value_tooltip
@@ -174,8 +174,8 @@ class MonitorView(QWidget):
         self.monitor_thread = MonitorThread(
             server=settings.host,
             port=settings.port,
-            interval_s=settings.interval_seconds,
-            timeout_s=settings.timeout_seconds,
+            interval_seconds=settings.interval_seconds,
+            timeout_seconds=settings.timeout_seconds,
         )
 
         self.monitor_thread.result.connect(self.on_check_result)

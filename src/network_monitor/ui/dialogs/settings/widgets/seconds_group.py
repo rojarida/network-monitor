@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget
 )
 
-from network_monitor.ui.help.tooltips import apply_tooltip
+from network_monitor.ui.help import apply_tooltip
 
 
 def _repolish(widget: QWidget) -> None:

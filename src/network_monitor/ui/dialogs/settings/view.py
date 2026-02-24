@@ -4,9 +4,10 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget, QLabel, QDialogButtonBox, QGridLayout
 
 from network_monitor.ui.widgets import make_titled_card
-from network_monitor.ui.dialogs.settings.widgets import SecondsGroup
-from network_monitor.ui.dialogs.settings.sections import TargetSection
-from network_monitor.ui.help.tooltips import SETTINGS_TOOLTIPS
+from network_monitor.ui.help import SETTINGS_TOOLTIPS
+
+from .widgets import SecondsGroup
+from .sections import TargetSection
 
 
 class SettingsDialogView(QWidget):
