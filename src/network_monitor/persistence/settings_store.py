@@ -124,7 +124,7 @@ class SettingsStore:
         self._settings.setValue("monitor/interval_s", float(settings.interval_seconds))
 
         self._settings.setValue("monitor/timeout_seconds", float(settings.timeout_seconds))
-        self._settings.setValue("mointor/timeout_s", float(settings.timeout_seconds))
+        self._settings.setValue("monitor/timeout_s", float(settings.timeout_seconds))
 
         self._settings.sync()
 

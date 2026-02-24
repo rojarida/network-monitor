@@ -6,7 +6,7 @@ import errno
 
 from PySide6.QtCore import QThread, Signal
 
-from network_monitor.services.monitor.state import CheckResult
+from network_monitor.core.monitor import CheckResult
 
 
 def try_connect(

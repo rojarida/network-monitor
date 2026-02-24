@@ -1,19 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
 from dataclasses import dataclass
+
 import time
 
-
-ConnectionStatus = Literal["online", "offline", "unreachable"]
-
-
-@dataclass
-class CheckResult:
-    status: ConnectionStatus
-    latency_ms: float | None
-    timestamp: float
-    error_kind: str | None = None
+from .models import ConnectionStatus, CheckResult
 
 
 @dataclass

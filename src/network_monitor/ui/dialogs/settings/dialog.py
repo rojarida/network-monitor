@@ -16,10 +16,10 @@ from network_monitor.core.normalize_target import (
     METHOD_URL
 )
 
-from network_monitor.persistence.settings_store import SettingsStore
+from network_monitor.persistence import SettingsStore
 from network_monitor.core.models import SettingsData, SettingsDialogState
-from network_monitor.ui.dialogs.settings.sections.target_section import TargetSection
-from network_monitor.ui.dialogs.settings.view import SettingsDialogView
+from network_monitor.ui.dialogs.settings.sections import TargetSection
+from network_monitor.ui.dialogs.settings import SettingsDialogView
 
 
 class SettingsDialog(QDialog):

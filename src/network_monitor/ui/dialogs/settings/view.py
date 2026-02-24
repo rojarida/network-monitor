@@ -3,9 +3,9 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget, QLabel, QDialogButtonBox, QGridLayout
 
-from network_monitor.ui.widgets.section_card import make_titled_card
-from network_monitor.ui.dialogs.settings.widgets.seconds_group import SecondsGroup
-from network_monitor.ui.dialogs.settings.sections.target_section import TargetSection
+from network_monitor.ui.widgets import make_titled_card
+from network_monitor.ui.dialogs.settings.widgets import SecondsGroup
+from network_monitor.ui.dialogs.settings.sections import TargetSection
 from network_monitor.ui.help.tooltips import SETTINGS_TOOLTIPS
 
 
