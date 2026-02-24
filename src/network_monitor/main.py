@@ -34,10 +34,7 @@ def main() -> int:
 
     settings_store = SettingsStore()
 
-    window = MainWindow(
-        settings_store=settings_store,
-        theme_manager=theme_manager,
-    )
+    window = MainWindow(settings_store=settings_store)
     window.show()
     return application.exec()
 
