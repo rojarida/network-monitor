@@ -144,6 +144,7 @@ QDialog#settings_dialog QLineEdit:focus,
 QDialog#settings_dialog QSpinBox:focus,
 QDialog#settings_dialog QDoubleSpinBox:focus {
   border-width: 2px;
+  padding: 3px 7px;
 }
 
 /* Radio buttons */

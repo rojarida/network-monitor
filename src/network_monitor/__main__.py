@@ -1,4 +1,4 @@
-from network_monitor.app import main
+from network_monitor.main import main
 
 
 if __name__ == "__main__":

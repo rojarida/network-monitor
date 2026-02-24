@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import sys
 from importlib import resources
+
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
-from network_monitor.ui.main_window import MainWindow
-from network_monitor.ui.themes.theme_manager import ThemeManager
+from network_monitor.ui import MainWindow
+from network_monitor.ui.themes import ThemeManager
+from network_monitor.persistence import SettingsStore
 
 
 def load_stylesheet(theme: str | None = None) -> str:
@@ -31,7 +33,9 @@ def main() -> int:
 
     # application.setStyleSheet(load_stylesheet())
 
-    window = MainWindow()
+    settings_store = SettingsStore()
+
+    window = MainWindow(settings_store=settings_store)
     window.show()
     return application.exec()
 
