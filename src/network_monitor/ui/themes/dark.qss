@@ -115,6 +115,11 @@ QPushButton#settings_button:pressed {
   border: #353535;
 }
 
+/* ------ THEME BUTTON ------ */
+QToolButton#theme_button {
+  color: #EDEDED;
+}
+
 /* ------ SETTINGS MENU ------- */
 
 QDialog#settings_dialog {

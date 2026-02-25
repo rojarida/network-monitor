@@ -80,6 +80,27 @@ QPushButton#settings_button {
   border-style: solid;
 }
 
+/* ----- THEME BUTTON ------ */
+
+QToolButton#theme_button {
+  border: none;
+  background: transparent;
+  padding: 0px;
+  margin: 0px;
+}
+
+QToolButton#theme_button:hover {
+  background: transparent;
+}
+
+QToolButton#theme_button:pressed {
+  background: transparent;
+}
+
+QToolButton#theme_button:focus {
+  border: none;
+}
+
 /* ------ SETTINGS MENU ------ */
 
 QDialog#settings_dialog {
