@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QLabel, QDialogButtonBox, QGridLayout
 
 from network_monitor.ui.widgets import make_titled_card
@@ -52,9 +53,11 @@ class SettingsDialogView(QWidget):
 
         if save_button is not None:
             save_button.setObjectName("save_button")
+            save_button.setIcon(QIcon())
 
         if cancel_button is not None:
             cancel_button.setObjectName("cancel_button")
+            cancel_button.setIcon(QIcon())
 
         root_layout = QGridLayout(self)
         root_layout.setContentsMargins(12, 12, 12, 12)

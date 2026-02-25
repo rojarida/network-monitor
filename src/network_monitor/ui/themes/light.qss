@@ -97,7 +97,7 @@ QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="latency"][level="b
   color: #DDDDDD;
 }
 
-/* ----- SETTINGS BUTTON ----- */
+/* ----- SETTINGS/THEME BUTTON ----- */
 
 QPushButton#settings_button {
   background-color: #E6E6E6;
@@ -113,6 +113,18 @@ QPushButton#settings_button:hover {
 QPushButton#settings_button:pressed {
   background-color: #ADADAD;
   border: #ABAAAA;
+}
+
+QToolButton#theme_button {
+  background-color: #E6E6E6;
+}
+
+QToolButton#theme_button:hover {
+  background-color: #D9D9D9;
+}
+
+QToolButton#theme_button:pressed {
+  background-color: #ADADAD;
 }
 
 /* ------ SETTINGS MENU ------- */
@@ -163,8 +175,8 @@ QDialog#settings_dialog QLineEdit,
 QDialog#settings_dialog QSpinBox,
 QDialog#settings_dialog QDoubleSpinBox {
   color: #333333;
-  border-color: #C4C4C4;
-  background-color: #CFCFCF;
+  border-color: #CACACA;
+  background-color: #F5F5F5;
 }
 
 QDialog#settings_dialog QLineEdit:focus,
@@ -228,4 +240,9 @@ QDialog#settings_dialog QPushButton#save_button:hover {
 
 QDialog#settings_dialog QPushButton#save_button:pressed {
   background-color: #0066C2;
+}
+
+QDialog#settings_dialog QPushButton#save_button:disabled {
+  background-color: #CE0000;
+  border-color: #B02000;
 }

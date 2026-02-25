@@ -19,7 +19,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Network Monitor")
         self.setCentralWidget(self.monitor_view)
-        self.setFixedSize(300, 360)
+        self.setFixedSize(300, 355)
 
         # Apply system theme at startup
         self._theme_manager.apply_system_theme()

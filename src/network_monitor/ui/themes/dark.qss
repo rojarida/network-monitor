@@ -97,7 +97,7 @@ QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="latency"][level="b
   color: #AAAAAA;
 }
 
-/* ----- SETTINGS BUTTON ----- */
+/* ----- SETTINGS/THEME BUTTON ----- */
 
 QPushButton#settings_button {
   background-color: #202020;
@@ -112,12 +112,22 @@ QPushButton#settings_button:hover {
 
 QPushButton#settings_button:pressed {
   background-color: #474747;
-  border: #353535;
+  border-color: #353535;
 }
 
-/* ------ THEME BUTTON ------ */
 QToolButton#theme_button {
-  color: #EDEDED;
+  background-color: #202020;
+  border-color: #252525;
+}
+
+QToolButton#theme_button:hover {
+  background-color: #292929;
+  border-color: #353535;
+}
+
+QToolButton#theme_button:pressed {
+  background-color: #474747;
+  border-color: #353535;
 }
 
 /* ------ SETTINGS MENU ------- */
@@ -233,4 +243,9 @@ QDialog#settings_dialog QPushButton#save_button:hover {
 
 QDialog#settings_dialog QPushButton#save_button:pressed {
   background-color: #0066E5;
+}
+
+QDialog#settings_dialog QPushButton#save_button:disabled {
+  background-color: #A00000;
+  border-color: #B02000;
 }

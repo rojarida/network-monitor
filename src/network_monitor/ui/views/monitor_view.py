@@ -171,6 +171,7 @@ class MonitorView(QWidget):
         settings_bar_layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignVCenter)
         settings_bar_layout.addStretch(1)
 
+        stats_layout.addStretch(1)
         stats_layout.addWidget(settings_bar)
         stats_layout.addStretch(1)
         root_layout.addWidget(stats_container)
