@@ -32,27 +32,31 @@ class ThemeManager(QObject):
         self._watcher.fileChanged.connect(self._schedule_reload)
         self._watcher.directoryChanged.connect(self._schedule_reload)
 
+    def effective_theme(self) -> ThemeName:
+        return self._get_system_theme() if self._current_theme is None else self._current_theme
+
+    def toggle_theme(self) -> ThemeName:
+        current = self.effective_theme()
+        new_theme: ThemeName = "light" if current == "dark" else "dark"
+        self.apply_theme(new_theme)
+        return new_theme
 
     def _read_text(self, path: Path) -> str:
         return path.read_text(encoding="utf-8")
-
 
     def _build_stylesheet(self, theme_name: ThemeName) -> str:
         base_qss = self._read_text(self._base_path)
         theme_qss = self._read_text(self._themes_dir / f"{theme_name}.qss")
         return f"{base_qss}\n\n/* ---- Theme: {theme_name} ---- */\n\n{theme_qss}\n"
 
-
     def apply_theme(self, theme_name: ThemeName) -> None:
         self._current_theme = theme_name
         self._app.setStyleSheet(self._build_stylesheet(theme_name))
-
 
     def apply_system_theme(self) -> None:
         self._current_theme = None
         theme_name = self._get_system_theme()
         self._app.setStyleSheet(self._build_stylesheet(theme_name))
-
 
     def _get_system_theme(self) -> ThemeName:
         style_hints = self._app.styleHints()
@@ -73,7 +77,6 @@ class ThemeManager(QObject):
         luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
         return "dark" if luminance < 128 else "light"
 
-
     def enable_live_reload(self) -> None:
         # Watch directory and files
         self._watcher.addPath(str(self._themes_dir))
@@ -81,10 +84,8 @@ class ThemeManager(QObject):
         self._watcher.addPath(str(self._dark_path))
         self._watcher.addPath(str(self._light_path))
 
-
     def _schedule_reload(self, _changed_path: str) -> None:
         self._reload_timer.start()
-
 
     def _reapply_current(self) -> None:
         watched = set(self._watcher.files())
@@ -94,6 +95,6 @@ class ThemeManager(QObject):
                 self._watcher.addPath(path_str)
 
         if self._current_theme is None:
-            self.apply_theme(self._get_system_theme())
+            self.apply_system_theme()
         else:
             self.apply_theme(self._current_theme)
