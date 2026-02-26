@@ -29,7 +29,6 @@ class MonitorState:
         self.last_latency_ms = None
         self.last_error_kind = None
 
-
     def apply(self, check_result: CheckResult) -> None:
         # Store latest "detail" information
         self.last_error_kind = check_result.error_kind
@@ -65,7 +64,6 @@ class MonitorState:
         self.last_status = check_result.status
         self.last_state_change_time = check_result.timestamp
 
-
     def set_endpoint(self, server: str, port: int) -> None:
         if self.server == server and self.port == port:
             return
@@ -75,7 +73,6 @@ class MonitorState:
         self.last_latency_ms = None
         self.last_error_kind = None
 
-
     def endpoint_changed(self) -> None:
         """
         Endpoint changes are NOT connectivity changes.
@@ -83,10 +80,8 @@ class MonitorState:
         self.last_latency_ms = None
         self.last_error_kind = None
 
-
     def current_phase_seconds(self) -> float:
         return max(0.0, time.monotonic() - self.last_state_change_time)
-
     
     def totals_including_current_phase(self) -> tuple[float, float]:
         total_uptime = self.total_uptime_seconds

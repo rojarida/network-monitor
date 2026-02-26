@@ -1,4 +1,20 @@
-/* ----- BASE AND TEXT ----- */
+/* =========================
+
+   Palette (quick reference)
+   - bg            #111111
+   - surface       #202020
+   - surface-2     #292929
+   - border        #252525 / #353535 / #444444
+   - text          #AAAAAA
+   - text-muted    #BBBBBB
+   - text-dim      #777777 / #555555
+   - green         #1C4700
+   - red           #590000
+   - yellow        #836300
+   - blue          #003075
+   - accent        #0066E5
+
+ /* ----- MONITOR VIEW ----- */
 
 QWidget#monitor_view {
   background-color: #111111;
@@ -16,88 +32,71 @@ QLabel#metric_value {
   color: #555555;
 }
 
-/* ------ SEPARATORS ------ */
-
+/* Separators */
 QFrame#separator_top,
 QFrame#separator_middle,
 QFrame#separator_bottom {
-  background: #292929;
+  background-color: #292929;
 }
 
-/* ------ STATUS ------ */
-
-QLabel#status_label[status="online"] {
-  background: #1C4700;
+/* Status */
+QWidget#monitor_view QLabel#status_label {
   color: #AAAAAA;
 }
 
-QLabel#status_label[status="offline"] {
-  background: #590000;
+QLabel#status_label[status="online"]      { background-color: #1C4700; }
+QLabel#status_label[status="offline"]     { background-color: #590000; }
+QLabel#status_label[status="unreachable"] { background-color: #836300; }
+QLabel#status_label[status="unknown"]     { background-color: #707570; }
+
+/* Metrics */
+QWidget#monitor_view QLabel#metric_value[kind="pill"] {
+  background-color: #1C4700;
   color: #AAAAAA;
 }
 
-QLabel#status_label[status="unreachable"] {
-  background: #836300;
-  color: #AAAAAA;
-}
-
-QLabel#status_label[status="unknown"] {
-  background: #707570;
-  color: #AAAAAA;
-}
-
-/* --------- METRICS --------- */
-
-/* Base pill styling */
-QLabel#metric_value[kind="pill"] {
-  background: #1C4700;
-  color: #AAAAAA;
-}
-
-/* Keep total uptime green (for now) */
+/* Keep totals consistent */
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="uptime"] {
-  background: #1C4700;
+  background-color: #1C4700;
   color: #AAAAAA;
 }
 
-/* Keep total downtime red (for now) */
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="downtime"] {
-  background: #590000;
+  background-color: #590000;
   color: #AAAAAA;
 }
 
-/* When status is DOWN, change pills to red */
+/* Wash pills based on overall status */
 QWidget#monitor_view[status="offline"] QLabel#metric_value[kind="pill"] {
-  background: #590000;
+  background-color: #590000;
   color: #AAAAAA;
 }
 
-/* When status is UNREACHABLE, change pills to yellow */
 QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"] {
-  background: #836300;
+  background-color: #836300;
   color: #AAAAAA;
 }
 
-/* Keep server pill blue */
+/* Always keep server pill blue */
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="server"] {
-  background: #003075;
+  background-color: #003075;
   color: #AAAAAA;
 }
 
 /* Severity overrides */
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="disconnects"][level="warn"],
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="latency"][level="warn"] {
-  background: #836300;
+  background-color: #836300;
   color: #AAAAAA;
 }
 
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="disconnects"][level="bad"],
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="latency"][level="bad"] {
-  background: #9D322D;
+  background-color: #9D322D;
   color: #AAAAAA;
 }
 
-/* ----- SETTINGS/THEME BUTTON ----- */
+/* ----- SETTINGS BAR BUTTONS ----- */
 
 QPushButton#settings_button {
   background-color: #202020;
@@ -130,44 +129,33 @@ QToolButton#theme_button:pressed {
   border-color: #353535;
 }
 
-/* ------ SETTINGS MENU ------- */
+/* ----- SETTINGS DIALOG ----- */
 
 QDialog#settings_dialog {
   background-color: #111111;
 }
 
-QDialog#settings_dialog QLabel{
-  color: #111111;
+QDialog#settings_dialog QLabel {
+  color: #BBBBBB;
 }
 
 /* Headings */
-QDialog#settings_dialog QLabel[role="section_heading"] {
-  color: #AAAAAA;
-}
+QDialog#settings_dialog QLabel[role="section_heading"] { color: #AAAAAA; }
+QDialog#settings_dialog QLabel[role="method_heading"]  { color: #BBBBBB; }
+QDialog#settings_dialog QLabel[role="field_label"]     { color: #BBBBBB; }
 
-QDialog#settings_dialog QLabel[role="method_heading"] {
-  color: #BBBBBB;
-}
-
-/* Field labels (IP:, Port:, Hostname:, URL:) */
-QDialog#settings_dialog QLabel[role="field_label"] {
-  color: #BBBBBB;
-}
-
-/* Preview line ("Checking target: ...") */
 QDialog#settings_dialog QLabel#ip_preview_label,
 QDialog#settings_dialog QLabel#hostname_preview_label,
 QDialog#settings_dialog QLabel#url_preview_label {
   color: #BBBBBB;
 }
 
-/* Section cards */
+/* Cards */
 QDialog#settings_dialog QFrame[role="section_card"] {
   background-color: #202020;
   border-color: #272727;
 }
 
-/* Method mini-card */
 QDialog#settings_dialog QGroupBox#method_box {
   background-color: #292929;
   border-color: #353535;
@@ -210,7 +198,6 @@ QDialog#settings_dialog QRadioButton::indicator {
 QDialog#settings_dialog QRadioButton::indicator:checked {
   border: 2px solid #999999;
   background-color: #0066E5;
-  color: #0066E5;
 }
 
 /* Buttons */
@@ -229,7 +216,6 @@ QDialog#settings_dialog QPushButton#cancel_button:pressed {
   background-color: #525252;
   border-color: #424242;
 }
-
 
 QDialog#settings_dialog QPushButton#save_button {
   background-color: #00377B;

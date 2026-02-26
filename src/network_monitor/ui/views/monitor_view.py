@@ -78,7 +78,6 @@ class MonitorView(QWidget):
         self._stopping_threads: list[MonitorThread] = []
         self._settings: SettingsData | None = None
 
-
         self.setObjectName("monitor_view")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
