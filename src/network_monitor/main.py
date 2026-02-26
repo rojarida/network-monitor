@@ -3,18 +3,26 @@ from __future__ import annotations
 import sys
 
 from PySide6.QtCore import QCoreApplication
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from network_monitor.ui import MainWindow
-from network_monitor.ui.assets import resources_rc
+from network_monitor.ui.assets import resources_rc # noqa: F401
 from network_monitor.ui.themes import ThemeManager
 from network_monitor.persistence import SettingsStore
 
 
 def main() -> int:
     application = QApplication(sys.argv)
+    icon = QIcon.fromTheme("network-monitor")
+
+    if not icon:
+        icon = QIcon(":/icons/network-monitor")
+
+    application.setWindowIcon(icon)
     QCoreApplication.setOrganizationName("RomanJay")
     QCoreApplication.setApplicationName("Network Monitor")
+    QCoreApplication.setApplicationVersion("0.8.1")
 
     settings_store = SettingsStore()
     theme_manager = ThemeManager(application)
