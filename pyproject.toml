@@ -17,7 +17,7 @@ include = [
 
 [project]
 name = "network-monitor"
-version = "0.8.0"
+version = "0.8.1"
 description = "Desktop application to monitor network connectivity."
 readme = "README.md"
 requires-python = ">=3.11"
