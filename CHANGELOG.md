@@ -3,16 +3,16 @@
 All notable changes to this project are documented in this file.
 
 ### v0.8.1
-#### Changed
-- Improved light theme styling for better visual consistency.
-- Removed default Qt standard-button icons in the settings.
-- Minor UI polish for button interactions.
-
 #### Added
 - Light theme support (`light.qss`) in addition to the existing dark theme.
 - Theme toggle button in the main window for quick switching.
 - Live theme switching (instantly applies without restarting application).
 - Initial theme is set based on current system theme.
+
+#### Changed
+- Improved light theme styling for better visual consistency.
+- Removed default Qt standard-button icons in the settings.
+- Minor UI polish for button interactions.
 
 ### v0.8.0
 #### Changed
@@ -51,12 +51,6 @@ All notable changes to this project are documented in this file.
 - `light.qss` remain **IN PROGRESS** in this release.
 
 ### v0.7.0
-#### Changed
-- Replaced labels with section titles.
-- Introduced a completely new settings layout.
-- Settings can now be styled to match the rest of the application.
-- Consistent pill styling across the UI (application primarily used dark theme at this stage.)
-
 #### Added
 - Theme system groundwork:
     - `base.qss`: Shared structure/layout.
@@ -65,25 +59,26 @@ All notable changes to this project are documented in this file.
 - `ThemeManager` for centralized theme loading.
 - Live QSS reload (UI updates when `*.qss` files are saved).
 
-### v0.6.1
 #### Changed
-- URL target parsing now explicitly supports only `http` and `https` schemes and handles invalid ports more safely.
-- Hostname validation updated to allow single-label hostnames (e.g., `romanjay-srv`) that do not contain a dot.
+- Replaced labels with section titles.
+- Introduced a completely new settings layout.
+- Settings can now be styled to match the rest of the application.
+- Consistent pill styling across the UI (application primarily used dark theme at this stage.)
 
+### v0.6.1
 #### Added
 - Shared tooltip system (`tooltips.py`) with centralized tooltip text for both monitor metrics and settings fields.
 - Hover tooltips across the monitor view and settings for cleaner in-application explanations.
 - Support for storing a "full target" string for URL targets so long URLs can be shown on hover.
 
+#### Changed
+- URL target parsing now explicitly supports only `http` and `https` schemes and handles invalid ports more safely.
+- Hostname validation updated to allow single-label hostnames (e.g., `romanjay-srv`) that do not contain a dot.
+
 #### Fixed
 - Hostname targets no longer incorrectly require a `.` to be considered valid.
 
 ### v0.6.0
-#### Changed
-- Server pill text handling:
-    - Long targets are now middle-elided to prevent layout conflicts.
-    - Full target available on hover.
-
 #### Added
 - Target method selection in settings: `IP Address`, `Hostname`, and `URL`.
 - Hostname input now supports `host[:port]` (port will default to scheme).
@@ -91,14 +86,16 @@ All notable changes to this project are documented in this file.
 - Server pill now displays a "clean" target:
     - Hides default ports for `Hostname`/`URL` unless explicitly provided.
 
+#### Changed
+- Server pill text handling:
+    - Long targets are now middle-elided to prevent layout conflicts.
+    - Full target available on hover.
+
 #### Fixed
 - Prevented long hostnames from breaking the layout.
 - Improved target validation in settings.
 
 ### v0.5.0
-#### Changed
-- Updated UI and styling to support the `Unreachable` state.
-
 #### Added
 - Third connectivity state: `Unreachable`
     - Uses a fallback probe to distinguish `OFfline` (no internet connectivity) from `Unreachable` (internet appears stable, target is the issue).
@@ -107,6 +104,9 @@ All notable changes to this project are documented in this file.
     - Hostnames: `google.com` or `TEST-W11-PC`
     - URLs: `https://www.google.com/`
 - Added a status tooltip (hover) with extra details.
+
+#### Changed
+- Updated UI and styling to support the `Unreachable` state.
 
 ### v0.4.0
 #### Fixed
