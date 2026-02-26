@@ -46,7 +46,6 @@ class SettingsDialog(QDialog):
         self._load_settings()
         self._update_validation_ui()
 
-
     def _load_settings(self) -> None:
         settings = self._settings_store.load_settings()
         dialog_state = self._settings_store.load_dialog_state()

@@ -13,6 +13,7 @@ QWidget#stats_container {
 
 QWidget#monitor_view QLabel#status_label {
   qproperty-alignment: 'AlignVCenter | AlignCenter';
+
   min-width: 20px;
   min-height: 50px;
   max-height: 50px;
@@ -44,9 +45,11 @@ QLabel#metric_value[metric="server"] {
 /* Base pill styling */
 QLabel#metric_value[kind="pill"] {
   qproperty-alignment: 'AlignVCenter | AlignCenter';
+
   max-height: 30px;
   min-height: 30px;
   min-width: 20px;
+
   padding: 0px 12px;
   border-radius: 15px;
 }
@@ -83,6 +86,7 @@ QPushButton#settings_button {
 QToolButton#theme_button {
   border: none;
   background: transparent;
+
   padding: 0px;
   margin: 0px;
 
@@ -90,11 +94,8 @@ QToolButton#theme_button {
   border-radius: 17px;
 }
 
+QToolButton#theme_button:pressed,
 QToolButton#theme_button:hover {
-  background: transparent;
-}
-
-QToolButton#theme_button:pressed {
   background: transparent;
 }
 
@@ -185,6 +186,7 @@ QDialog#settings_dialog QPushButton {
   min-height: 22px;
   padding: 6px;
   margin: 5px;
+
   border-radius: 15px;
   border: 1px solid transparent;
   

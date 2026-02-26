@@ -212,8 +212,6 @@ class TargetSection(QWidget):
         self.hostname_method_radio_button.setChecked(True)
         self.ensure_defaults()
 
-    # ----- Public methods -----
-
     def current_method(self) -> str:
         if self.hostname_method_radio_button.isChecked():
             return METHOD_HOSTNAME
@@ -303,7 +301,6 @@ class TargetSection(QWidget):
         except ValueError:
             return METHOD_HOSTNAME
 
-    # ----- Private methods -----
     def _on_target_method_changed(self, *_: object) -> None:
         method = self.current_method()
 
