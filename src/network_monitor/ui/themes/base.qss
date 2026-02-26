@@ -65,7 +65,7 @@ QFrame#settings_bar {
   border: none;
 }
 
-/* ----- SETTINGS BUTTON ----- */
+/* ----- SETTINGS/THEME BUTTON ----- */
 
 QPushButton#settings_button {
   min-width: 100px;
@@ -78,6 +78,24 @@ QPushButton#settings_button {
 
   border-width: 1px;
   border-style: solid;
+}
+
+QToolButton#theme_button {
+  border: none;
+  background: transparent;
+  padding: 0px;
+  margin: 0px;
+
+  min-width: 55px;
+  border-radius: 17px;
+}
+
+QToolButton#theme_button:hover {
+  background: transparent;
+}
+
+QToolButton#theme_button:pressed {
+  background: transparent;
 }
 
 /* ------ SETTINGS MENU ------ */

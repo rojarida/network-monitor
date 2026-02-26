@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from PySide6.QtGui import QFontMetrics, QPainter, QPalette
-from PySide6.QtCore import QTimer, Signal, Qt
+from PySide6.QtGui import QFontMetrics, QPainter, QPalette, QIcon
+from PySide6.QtCore import QTimer, Signal, Qt, QSize
 from PySide6.QtWidgets import (
     QWidget, 
     QLabel, 
@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStyle,
     QStyleOption,
+    QToolButton,
 )
 
 from network_monitor.core.models import SettingsData
@@ -19,6 +20,7 @@ from network_monitor.ui.workers import MonitorThread
 from network_monitor.core.monitor import MonitorState, CheckResult
 from network_monitor.ui.help import (
     METRIC_TOOLTIPS,
+    THEME_TOOLTIPS,
     apply_tooltip,
     status_value_tooltip
 )
@@ -69,12 +71,13 @@ class ElidedLabel(QLabel):
 
 class MonitorView(QWidget):
     settings_requested = Signal()
-
+    theme_toggle_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._stopping_threads: list[MonitorThread] = []
         self._settings: SettingsData | None = None
+
 
         self.setObjectName("monitor_view")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -119,7 +122,9 @@ class MonitorView(QWidget):
         downtime_row, _downtime_label, self.total_downtime_value = self._make_metric_row("Total downtime")
         self.total_downtime_value.setProperty("metric", "downtime")
 
+        stats_layout.addStretch(1)
         stats_layout.addWidget(status_row)
+        stats_layout.addStretch(1)
         stats_layout.addWidget(self._make_separator("separator_top"))
         stats_layout.addWidget(server_row)
         stats_layout.addWidget(self._make_separator("separator_top"))
@@ -139,17 +144,34 @@ class MonitorView(QWidget):
         settings_bar.setObjectName("settings_bar")
         settings_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        settings_bar_layout = QVBoxLayout(settings_bar)
+        settings_bar_layout = QHBoxLayout(settings_bar)
         settings_bar_layout.setContentsMargins(0, 0, 0, 0)
         settings_bar_layout.setSpacing(0)
+
+        # Theme button
+        self.theme_button = QToolButton()
+        self.theme_button.setObjectName("theme_button")
+        self.theme_button.setAutoRaise(False)
+        self.theme_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._sun_icon = QIcon(":/icons/sun.svg")
+        self._moon_icon = QIcon(":/icons/moon.svg")
+        self.theme_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self.theme_button.setIconSize(QSize(25, 25))
+        self.theme_button.setFixedSize(35, 35)
+        self.theme_button.clicked.connect(self.theme_toggle_requested.emit)
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.setObjectName("settings_button")
         self.settings_button.setProperty("kind", "pill")
         self.settings_button.clicked.connect(self.settings_requested.emit)
 
-        settings_bar_layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignHCenter)
+        settings_bar_layout.addStretch(1)
+        settings_bar_layout.addWidget(self.theme_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+        settings_bar_layout.setSpacing(5)
+        settings_bar_layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+        settings_bar_layout.addStretch(1)
 
+        stats_layout.addStretch(1)
         stats_layout.addWidget(settings_bar)
         stats_layout.addStretch(1)
         root_layout.addWidget(stats_container)
@@ -362,7 +384,7 @@ class MonitorView(QWidget):
         timeout_s = getattr(thread, "timeout_s", 1.0)
 
         # Apply-config
-        # Shutdown: Wait long enough for the in-flight connect to return
+        # Shutown: Wait long enough for the in-flight connect to return
         wait_ms = int(((timeout_s + 1.0) if blocking else min(timeout_s, 1.0)) * 1000)
         finished = thread.wait(wait_ms)
 
@@ -385,6 +407,17 @@ class MonitorView(QWidget):
             thread.finished.connect(_cleanup)
 
         self.monitor_thread = None
+
+    def set_theme_toggle_target(self, target_theme: str) -> None:
+        # target_theme is the theme that will be activated when clicked
+        if target_theme == "light":
+            self.theme_button.setIcon(self._sun_icon)
+        else:
+            self.theme_button.setIcon(self._moon_icon)
+
+        apply_tooltip((self.theme_button,), THEME_TOOLTIPS.get(target_theme, ""))
+        self.theme_button.setProperty("target_theme", target_theme)
+        self._repolish(self.theme_button)
 
     def shutdown(self) -> None:
         if getattr(self, "ui_refresh_timer", None):

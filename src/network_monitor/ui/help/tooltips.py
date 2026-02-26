@@ -143,6 +143,11 @@ SETTINGS_TOOLTIPS: dict[str, str] = {
     ),
 }
 
+THEME_TOOLTIPS: dict[str, str] = {
+    "light": "Switch to Light mode",
+    "dark": "Switch to Dark mode",
+}
+
 
 def apply_tooltip(widgets: Iterable[QtWidgets.QWidget], tooltip_text: str) -> None:
     if not tooltip_text:
