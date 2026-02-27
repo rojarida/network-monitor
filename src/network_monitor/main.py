@@ -22,7 +22,7 @@ def main() -> int:
     application.setWindowIcon(icon)
     QCoreApplication.setOrganizationName("RomanJay")
     QCoreApplication.setApplicationName("Network Monitor")
-    QCoreApplication.setApplicationVersion("0.8.1")
+    QCoreApplication.setApplicationVersion("0.8.2")
 
     settings_store = SettingsStore()
     theme_manager = ThemeManager(application)

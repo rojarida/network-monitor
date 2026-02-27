@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+### v0.8.2
+### Added
+- Play/Pause monitoring control in the footer.
+- Play/Pause button behavior:
+    - Running: Shows `Pause` button.
+    - Paused: Shows `Play` button.
+- Paused mode:
+    - Status pills shows `Paused`
+    - Metric pills are gray and display the text `-` to indicate frozen metrics.
+- Paused styling:
+    - `paused=true` property on the monitor view.
+
+### Changed
+- When paused, the `Online for` label switches to `Paused`.
+
+### Fixed
+- Prevented monitor results from updating UI while paused.
+- Prevented `refresh_labels()` from overwriting paused placeholders (`-`) while paused.
+- Ensured applying settings while paused does not block play/pause.
+- Play/Pause button is theme-aware.
+
 ### v0.8.1
 #### Added
 - Light theme support (`light.qss`) in addition to the existing dark theme.
