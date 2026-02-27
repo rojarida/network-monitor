@@ -127,3 +127,4 @@ python -m network_monitor
 - [x] Statistics keep resetting on status change (fixed in [v0.3.1](CHANGELOG.md#v031))
 - [x] Disconnects aren't being incremented/tracked (fixed in [v0.3.2](CHANGELOG.md#v032))
 - [x] When changing interval checks and timeout checks, the current phase resets (fixed in [v0.4.0](CHANGELOG.md#v040))
+- [x] When pausing the monitoring, the timer continues counting in the background (fixed in [v0.8.2](CHANGELOG.md#v083))

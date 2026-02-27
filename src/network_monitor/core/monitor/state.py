@@ -21,6 +21,8 @@ class MonitorState:
     last_latency_ms: float | None = None
     last_error_kind: str | None = None
 
+    _paused_at: float | None = None
+
 
     def start(self) -> None:
         now = time.monotonic()
@@ -28,7 +30,28 @@ class MonitorState:
         self.last_state_change_time = now
         self.last_latency_ms = None
         self.last_error_kind = None
+        self._paused_at = None
 
+    def pause(self) -> None:
+        if self._paused_at is None:
+            self._paused_at = time.monotonic()
+
+    def resume(self) -> None:
+        if self._paused_at is None:
+            return
+        
+        now = time.monotonic()
+        paused_duration = now - self._paused_at
+        self._paused_at = None
+
+        self.last_state_change_time += paused_duration
+
+    def _now(self) -> float:
+        return self._paused_at if self._paused_at is not None else time.monotonic()
+
+    def current_phase_seconds(self) -> float:
+        return max(0.0, self._now() - self.last_state_change_time)
+    
     def apply(self, check_result: CheckResult) -> None:
         # Store latest "detail" information
         self.last_error_kind = check_result.error_kind
@@ -80,9 +103,6 @@ class MonitorState:
         self.last_latency_ms = None
         self.last_error_kind = None
 
-    def current_phase_seconds(self) -> float:
-        return max(0.0, time.monotonic() - self.last_state_change_time)
-    
     def totals_including_current_phase(self) -> tuple[float, float]:
         total_uptime = self.total_uptime_seconds
         total_downtime = self.total_downtime_seconds

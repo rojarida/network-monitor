@@ -434,16 +434,18 @@ class MonitorView(QWidget):
             self._pause_monitoring()
 
     def _resume_monitoring(self) -> None:
+        self.monitor_state.resume()
         self._monitoring_enabled = True
-        self._set_paused_mode(False)
 
         if not self.ui_refresh_timer.isActive():
             self.ui_refresh_timer.start()
 
+        self._set_paused_mode(False)
         self._start_monitor_thread()
         self._refresh_monitor_toggle_icon()
 
     def _pause_monitoring(self) -> None:
+        self.monitor_state.pause()
         self._monitoring_enabled = False
         self._stop_monitor_thread()
 
