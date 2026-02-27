@@ -81,11 +81,6 @@ QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"] {
   color: #EEEEEE;
 }
 
-QWidget#monitor_view[status="paused"] QLabel#metric_value[kind="pill"] {
-  background-color: #919191;
-}
-
-
 /* Always keep server pill blue */
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="server"] {
   background-color: #0081F6;
@@ -128,6 +123,7 @@ QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][level="bad"
   background-color: #919191;
   color: #EEEEEE;
 }
+
 /* ----- SETTINGS BAR BUTTONS ----- */
 
 QPushButton#settings_button {
