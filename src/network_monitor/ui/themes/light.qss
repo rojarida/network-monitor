@@ -47,7 +47,11 @@ QLabel#status_label[status="online"]        { background-color: #3EA000; }
 QLabel#status_label[status="offline"]       { background-color: #CE0000; }
 QLabel#status_label[status="unreachable"]   { background-color: #836300; }
 QLabel#status_label[status="unknown"]       { background-color: #707570; }
-QLabel#status_label[status="paused"]        { background-color: #919191; }
+
+QWidget#monitor_view[paused="true"] QLabel#status_label[paused="true"] {
+  background-color: #919191;
+  color: #EEEEEE;
+}
 
 /* Metrics */
 QWidget#monitor_view QLabel#metric_value[kind="pill"] {
@@ -77,6 +81,11 @@ QWidget#monitor_view[status="unreachable"] QLabel#metric_value[kind="pill"] {
   color: #EEEEEE;
 }
 
+QWidget#monitor_view[status="paused"] QLabel#metric_value[kind="pill"] {
+  background-color: #919191;
+}
+
+
 /* Always keep server pill blue */
 QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="server"] {
   background-color: #0081F6;
@@ -96,6 +105,29 @@ QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="latency"][level="b
   color: #EEEEEE;
 }
 
+/* ------------------- When application is paused ---------------*/
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"] {
+  background-color: #919191;
+  color: #EEEEEE;
+}
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][metric="uptime"],
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][metric="downtime"] {
+  background-color: #919191;
+  color: #EEEEEE;
+}
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][metric="server"] {
+  background-color: #919191;
+  color: #EEEEEE;
+}
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][level="warn"],
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][level="bad"] {
+  background-color: #919191;
+  color: #EEEEEE;
+}
 /* ----- SETTINGS BAR BUTTONS ----- */
 
 QPushButton#settings_button {

@@ -210,6 +210,15 @@ class MonitorView(QWidget):
         # Update state endpoint
         self.monitor_state.set_endpoint(settings.host, settings.port)
 
+        # Update UI from settings
+        self.server_value.setText(settings.display_target)
+        self.server_value.setToolTip(settings.full_target)
+
+        if self.property("paused") or not getattr(self, "_monitoring_enabled", True):
+            self.monitor_thread = None
+            self._set_paused_mode(True)
+            return
+
         # Restart thread with new configuration
         self.monitor_thread = MonitorThread(
             server=settings.host,
@@ -219,20 +228,17 @@ class MonitorView(QWidget):
         )
 
         self.monitor_thread.result.connect(self.on_check_result)
+        self.monitor_thread.start()
         
-        if getattr(self, "_monitoring_enabled", True):
-            self.monitor_thread.start()
-
-        # Update UI from settings
-        self.server_value.setText(settings.display_target)
-        self.server_value.setToolTip(settings.full_target)
-
         self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
         self._repolish(self.status_label)
         self.refresh_labels()
 
     def refresh_labels(self) -> None:
+        if self.property("paused") is True:
+            return
+
         last_status = self.monitor_state.last_status
 
         if last_status is None:
@@ -330,6 +336,32 @@ class MonitorView(QWidget):
         current_phase_seconds = self.monitor_state.current_phase_seconds()
         self.phase_value.setText(format_seconds_as_hhmmss(current_phase_seconds))
 
+    def _set_paused_mode(self, paused: bool) -> None:
+        """Overwrites the current labels used by `refresh_labels()`"""
+        if self.property("paused") != paused:
+            self.setProperty("paused", paused)
+            self._repolish(self)
+
+        pill_labels = [widget for widget in self.findChildren(QLabel) if widget.property("kind") == "pill"]
+
+        if paused:
+            self.status_pill.setText("Paused")
+            self.status_pill.setProperty("paused", paused)
+            self.status_pill.setToolTip("Monitoring paused")
+
+            self.phase_label.setText("Paused")
+            
+            for widget in pill_labels:
+                if widget is self.status_pill or widget is self.server_value:
+                    continue
+                widget.setText("-")
+
+            self.latency_value.setProperty("level", "na")
+            self.disconnects_value.setProperty("level", "na")
+
+        for widget in pill_labels:
+            self._repolish(widget)
+
     def _make_separator(self, name: str) -> QFrame:
         line = QFrame()
         line.setObjectName(name)
@@ -388,6 +420,8 @@ class MonitorView(QWidget):
         widget.update()
 
     def on_check_result(self, result_object: object) -> None:
+        if self.property("paused"):
+            return
         if not isinstance(result_object, CheckResult):
             return
         self.monitor_state.apply(result_object)
@@ -401,14 +435,12 @@ class MonitorView(QWidget):
 
     def _resume_monitoring(self) -> None:
         self._monitoring_enabled = True
+        self._set_paused_mode(False)
 
         if not self.ui_refresh_timer.isActive():
             self.ui_refresh_timer.start()
 
         self._start_monitor_thread()
-
-        # TODO: Fix tooltip
-        self.monitor_toggle_button.setToolTip("Pause monitoring")
         self._refresh_monitor_toggle_icon()
 
     def _pause_monitoring(self) -> None:
@@ -418,12 +450,7 @@ class MonitorView(QWidget):
         if self.ui_refresh_timer.isActive():
             self.ui_refresh_timer.stop()
 
-        self.status_pill.setText("Paused")
-        self.status_pill.setProperty("status", "paused")
-        self._repolish(self.status_pill)
-
-        # TODO: Fix tooltip
-        self.monitor_toggle_button.setToolTip("Resume Monitoring")
+        self._set_paused_mode(True)
         self._refresh_monitor_toggle_icon()
 
     def _start_monitor_thread(self) -> None:
