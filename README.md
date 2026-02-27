@@ -117,7 +117,7 @@ python -m network_monitor
 - [ ] Taskbar Functionality
 - [ ] Ability to resize application window
 - [ ] Disconnect debounce (reduce false disconnects)
-- [ ] Start / Stop monitoring controls
+- [x] Start / Stop monitoring controls (implemented in [v0.8.2](CHANGELOG.md#v082))
 - [ ] Latency statistics (min/avg/max over last N checks)
 - [ ] History Viewing (recent checks table)
 - [ ] Profiles (switch between configurations more easily)
