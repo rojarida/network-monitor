@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+### v0.8.3
+#### Fixed
+- Pause now correctly stops counting in the background.
+
 ### v0.8.2
 ### Added
 - Play/Pause monitoring control in the footer.
