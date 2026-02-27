@@ -3,5 +3,9 @@
         <file>icons/sun.svg</file>
         <file>icons/moon.svg</file>
         <file>icons/network-monitor.png</file>
+        <file>icons/light-play.svg</file>
+        <file>icons/dark-play.svg</file>
+        <file>icons/light-pause.svg</file>
+        <file>icons/dark-pause.svg</file>
     </qresource>
 </RCC>

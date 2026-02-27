@@ -2498,6 +2498,62 @@ B\x08!\x84\x10B\x08!\x84\x10B\x08!\x84\x10B\
 !\x84\x10B\x08!\x84\x10R\x98\xff\x0f;\xe1x\x93\
 \xda\xc9Of\x00\x00\x00\x00IEND\xaeB`\x82\
 \
+\x00\x00\x03]\
+<\
+!DOCTYPE svg PUB\
+LIC \x22-//W3C//DTD\
+ SVG 1.1//EN\x22 \x22h\
+ttp://www.w3.org\
+/Graphics/SVG/1.\
+1/DTD/svg11.dtd\x22\
+>\x0a<!-- Uploaded \
+to: SVG Repo, ww\
+w.svgrepo.com, T\
+ransformed by: S\
+VG Repo Mixer To\
+ols -->\x0a<svg fil\
+l=\x22#ffffff\x22 widt\
+h=\x22800px\x22 height\
+=\x22800px\x22 viewBox\
+=\x220 0 32.00 32.0\
+0\x22 version=\x221.1\x22\
+ xmlns=\x22http://w\
+ww.w3.org/2000/s\
+vg\x22 stroke=\x22#fff\
+fff\x22>\x0a\x0d<g id=\x22SV\
+GRepo_bgCarrier\x22\
+ stroke-width=\x220\
+\x22/>\x0a\x0d<g id=\x22SVGR\
+epo_tracerCarrie\
+r\x22 stroke-lineca\
+p=\x22round\x22 stroke\
+-linejoin=\x22round\
+\x22/>\x0a\x0d<g id=\x22SVGR\
+epo_iconCarrier\x22\
+> <title>pause</\
+title> <path d=\x22\
+M5.92 24.096q0 0\
+.832 0.576 1.408\
+t1.44 0.608h4.03\
+2q0.832 0 1.44-0\
+.608t0.576-1.408\
+v-16.16q0-0.832-\
+0.576-1.44t-1.44\
+-0.576h-4.032q-0\
+.832 0-1.44 0.57\
+6t-0.576 1.44v16\
+.16zM18.016 24.0\
+96q0 0.832 0.608\
+ 1.408t1.408 0.6\
+08h4.032q0.832 0\
+ 1.44-0.608t0.57\
+6-1.408v-16.16q0\
+-0.832-0.576-1.4\
+4t-1.44-0.576h-4\
+.032q-0.832 0-1.\
+408 0.576t-0.608\
+ 1.44v16.16z\x22/> \
+</g>\x0a\x0d</svg>\
 \x00\x00\x0e\xa6\
 <\
 svg fill=\x22#FFFFF\
@@ -2735,6 +2791,132 @@ C 16.109375 35.3\
 7.941406 24.9062\
 5 37.96875 Z\x22/><\
 /svg>\
+\x00\x00\x02\x09\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22utf\
+-8\x22?>\x0d\x0a<!-- Uplo\
+aded to: SVG Rep\
+o, www.svgrepo.c\
+om, Generator: S\
+VG Repo Mixer To\
+ols -->\x0d\x0a<svg fi\
+ll=\x22#000000\x22 wid\
+th=\x22800px\x22 heigh\
+t=\x22800px\x22 viewBo\
+x=\x220 0 32 32\x22 ve\
+rsion=\x221.1\x22 xmln\
+s=\x22http://www.w3\
+.org/2000/svg\x22>\x0d\
+\x0a<title>play</ti\
+tle>\x0d\x0a<path d=\x22M\
+5.92 24.096q0 1.\
+088 0.928 1.728 \
+0.512 0.288 1.08\
+8 0.288 0.448 0 \
+0.896-0.224l16.1\
+6-8.064q0.48-0.2\
+56 0.8-0.736t0.2\
+88-1.088-0.288-1\
+.056-0.8-0.736l-\
+16.16-8.064q-0.4\
+48-0.224-0.896-0\
+.224-0.544 0-1.0\
+88 0.288-0.928 0\
+.608-0.928 1.728\
+v16.16z\x22></path>\
+\x0d\x0a</svg>\
+\x00\x00\x02\xf2\
+<\
+!DOCTYPE svg PUB\
+LIC \x22-//W3C//DTD\
+ SVG 1.1//EN\x22 \x22h\
+ttp://www.w3.org\
+/Graphics/SVG/1.\
+1/DTD/svg11.dtd\x22\
+>\x0a<!-- Uploaded \
+to: SVG Repo, ww\
+w.svgrepo.com, T\
+ransformed by: S\
+VG Repo Mixer To\
+ols -->\x0a<svg fil\
+l=\x22#ffffff\x22 widt\
+h=\x22800px\x22 height\
+=\x22800px\x22 viewBox\
+=\x220 0 32 32\x22 ver\
+sion=\x221.1\x22 xmlns\
+=\x22http://www.w3.\
+org/2000/svg\x22 st\
+roke=\x22#ffffff\x22>\x0a\
+\x0d<g id=\x22SVGRepo_\
+bgCarrier\x22 strok\
+e-width=\x220\x22/>\x0a\x0d<\
+g id=\x22SVGRepo_tr\
+acerCarrier\x22 str\
+oke-linecap=\x22rou\
+nd\x22 stroke-linej\
+oin=\x22round\x22/>\x0a\x0d<\
+g id=\x22SVGRepo_ic\
+onCarrier\x22> <tit\
+le>play</title> \
+<path d=\x22M5.92 2\
+4.096q0 1.088 0.\
+928 1.728 0.512 \
+0.288 1.088 0.28\
+8 0.448 0 0.896-\
+0.224l16.16-8.06\
+4q0.48-0.256 0.8\
+-0.736t0.288-1.0\
+88-0.288-1.056-0\
+.8-0.736l-16.16-\
+8.064q-0.448-0.2\
+24-0.896-0.224-0\
+.544 0-1.088 0.2\
+88-0.928 0.608-0\
+.928 1.728v16.16\
+z\x22/> </g>\x0a\x0d</svg\
+>\
+\x00\x00\x02n\
+<\
+?xml version=\x221.\
+0\x22 encoding=\x22utf\
+-8\x22?>\x0d\x0a<!-- Uplo\
+aded to: SVG Rep\
+o, www.svgrepo.c\
+om, Generator: S\
+VG Repo Mixer To\
+ols -->\x0d\x0a<svg fi\
+ll=\x22#000000\x22 wid\
+th=\x22800px\x22 heigh\
+t=\x22800px\x22 viewBo\
+x=\x220 0 32 32\x22 ve\
+rsion=\x221.1\x22 xmln\
+s=\x22http://www.w3\
+.org/2000/svg\x22>\x0d\
+\x0a<title>pause</t\
+itle>\x0d\x0a<path d=\x22\
+M5.92 24.096q0 0\
+.832 0.576 1.408\
+t1.44 0.608h4.03\
+2q0.832 0 1.44-0\
+.608t0.576-1.408\
+v-16.16q0-0.832-\
+0.576-1.44t-1.44\
+-0.576h-4.032q-0\
+.832 0-1.44 0.57\
+6t-0.576 1.44v16\
+.16zM18.016 24.0\
+96q0 0.832 0.608\
+ 1.408t1.408 0.6\
+08h4.032q0.832 0\
+ 1.44-0.608t0.57\
+6-1.408v-16.16q0\
+-0.832-0.576-1.4\
+4t-1.44-0.576h-4\
+.032q-0.832 0-1.\
+408 0.576t-0.608\
+ 1.44v16.16z\x22></\
+path>\x0d\x0a</svg>\
 "
 
 qt_resource_name = b"\
@@ -2751,23 +2933,47 @@ qt_resource_name = b"\
 \x00n\
 \x00e\x00t\x00w\x00o\x00r\x00k\x00-\x00m\x00o\x00n\x00i\x00t\x00o\x00r\x00.\x00p\
 \x00n\x00g\
+\x00\x0f\
+\x07{\x1c'\
+\x00l\
+\x00i\x00g\x00h\x00t\x00-\x00p\x00a\x00u\x00s\x00e\x00.\x00s\x00v\x00g\
 \x00\x07\
 \x0a\xc1Z'\
 \x00s\
 \x00u\x00n\x00.\x00s\x00v\x00g\
+\x00\x0d\
+\x07\x9d\x93\x87\
+\x00d\
+\x00a\x00r\x00k\x00-\x00p\x00l\x00a\x00y\x00.\x00s\x00v\x00g\
+\x00\x0e\
+\x0d6\xae\x87\
+\x00l\
+\x00i\x00g\x00h\x00t\x00-\x00p\x00l\x00a\x00y\x00.\x00s\x00v\x00g\
+\x00\x0e\
+\x0d\x8c\xcdg\
+\x00d\
+\x00a\x00r\x00k\x00-\x00p\x00a\x00u\x00s\x00e\x00.\x00s\x00v\x00g\
 "
 
 qt_resource_struct = b"\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\
 \x00\x00\x00\x00\x00\x00\x00\x00\
-\x00\x00\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\x02\
+\x00\x00\x00\x00\x00\x02\x00\x00\x00\x07\x00\x00\x00\x02\
 \x00\x00\x00\x00\x00\x00\x00\x00\
 \x00\x00\x00&\x00\x00\x00\x00\x00\x01\x00\x00\x01\x8e\
-\x00\x00\x01\x9c\x9b\x0e\xc7x\
+\x00\x00\x01\x9c\x9f\xa4\xb3\x80\
 \x00\x00\x00\x10\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\
 \x00\x00\x01\x9c\x97b'\xc0\
 \x00\x00\x00R\x00\x00\x00\x00\x00\x01\x00\x00\x9bs\
+\x00\x00\x01\x9c\x9f\xf3\x86\x7f\
+\x00\x00\x00\x8a\x00\x00\x00\x00\x00\x01\x00\x00\xad~\
+\x00\x00\x01\x9c\x9f\xf2%\xf1\
+\x00\x00\x00v\x00\x00\x00\x00\x00\x01\x00\x00\x9e\xd4\
 \x00\x00\x01\x9c\x97b'\xc1\
+\x00\x00\x00\xaa\x00\x00\x00\x00\x00\x01\x00\x00\xaf\x8b\
+\x00\x00\x01\x9c\x9f\xf2\xadU\
+\x00\x00\x00\xcc\x00\x00\x00\x00\x00\x01\x00\x00\xb2\x81\
+\x00\x00\x01\x9c\x9f\xf3\x10\xf1\
 "
 
 def qInitResources():

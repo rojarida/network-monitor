@@ -22,8 +22,11 @@ from network_monitor.ui.help import (
     METRIC_TOOLTIPS,
     THEME_TOOLTIPS,
     apply_tooltip,
-    status_value_tooltip
+    status_value_tooltip,
 )
+
+
+STATUS_ICON_BUTTON_SIZE = 36
 
 
 def format_seconds_as_hhmmss(seconds: float) -> str:
@@ -72,11 +75,18 @@ class ElidedLabel(QLabel):
 class MonitorView(QWidget):
     settings_requested = Signal()
     theme_toggle_requested = Signal()
+    monitor_toggle_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._stopping_threads: list[MonitorThread] = []
         self._settings: SettingsData | None = None
+        self._sun_icon          = QIcon(":/icons/sun.svg")
+        self._moon_icon         = QIcon(":/icons/moon.svg")
+        self._dark_play_icon    = QIcon(":/icons/dark-play.svg")
+        self._light_play_icon   = QIcon(":/icons/light-play.svg")
+        self._dark_pause_icon   = QIcon(":/icons/dark-pause.svg")
+        self._light_pause_icon  = QIcon(":/icons/light-pause.svg")
 
         self.setObjectName("monitor_view")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -95,11 +105,11 @@ class MonitorView(QWidget):
         stats_layout.setContentsMargins(8, 6, 8, 6)
 
         # Labels and metrics
-        status_row, _status_key, status_pill = self._make_metric_row(
+        status_row, self._status_key, self.status_pill = self._make_metric_row(
             "Status",
             center_value=True,
             value_object_name="status_label")
-        self.status_label = status_pill
+        self.status_label = self.status_pill
         self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
 
@@ -121,9 +131,7 @@ class MonitorView(QWidget):
         downtime_row, _downtime_label, self.total_downtime_value = self._make_metric_row("Total downtime")
         self.total_downtime_value.setProperty("metric", "downtime")
 
-        stats_layout.addStretch(1)
         stats_layout.addWidget(status_row)
-        stats_layout.addStretch(1)
         stats_layout.addWidget(self._make_separator("separator_top"))
         stats_layout.addWidget(server_row)
         stats_layout.addWidget(self._make_separator("separator_top"))
@@ -152,8 +160,6 @@ class MonitorView(QWidget):
         self.theme_button.setObjectName("theme_button")
         self.theme_button.setAutoRaise(False)
         self.theme_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._sun_icon = QIcon(":/icons/sun.svg")
-        self._moon_icon = QIcon(":/icons/moon.svg")
         self.theme_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.theme_button.setIconSize(QSize(25, 25))
         self.theme_button.setFixedSize(35, 35)
@@ -164,10 +170,23 @@ class MonitorView(QWidget):
         self.settings_button.setProperty("kind", "pill")
         self.settings_button.clicked.connect(self.settings_requested.emit)
 
+        self.monitor_toggle_button = QToolButton()
+        self.monitor_toggle_button.setObjectName("monitor_toggle_button")
+        self.monitor_toggle_button.setAutoRaise(False)
+        self.monitor_toggle_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.monitor_toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self.monitor_toggle_button.setIconSize(QSize(25, 25))
+        self.monitor_toggle_button.setFixedSize(STATUS_ICON_BUTTON_SIZE, STATUS_ICON_BUTTON_SIZE)
+
+        self.monitor_toggle_button.setCheckable(True)
+        self.monitor_toggle_button.setChecked(True)
+        self.monitor_toggle_button.toggled.connect(self._on_monitor_toggled)
+
         settings_bar_layout.addStretch(1)
         settings_bar_layout.addWidget(self.theme_button, alignment=Qt.AlignmentFlag.AlignVCenter)
         settings_bar_layout.setSpacing(5)
         settings_bar_layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+        settings_bar_layout.addWidget(self.monitor_toggle_button, alignment=Qt.AlignmentFlag.AlignVCenter)
         settings_bar_layout.addStretch(1)
 
         stats_layout.addStretch(1)
@@ -200,7 +219,9 @@ class MonitorView(QWidget):
         )
 
         self.monitor_thread.result.connect(self.on_check_result)
-        self.monitor_thread.start()
+        
+        if getattr(self, "_monitoring_enabled", True):
+            self.monitor_thread.start()
 
         # Update UI from settings
         self.server_value.setText(settings.display_target)
@@ -372,6 +393,55 @@ class MonitorView(QWidget):
         self.monitor_state.apply(result_object)
         self.refresh_labels()
 
+    def _on_monitor_toggled(self, monitoring_enable: bool) -> None:
+        if monitoring_enable:
+            self._resume_monitoring()
+        else:
+            self._pause_monitoring()
+
+    def _resume_monitoring(self) -> None:
+        self._monitoring_enabled = True
+
+        if not self.ui_refresh_timer.isActive():
+            self.ui_refresh_timer.start()
+
+        self._start_monitor_thread()
+
+        # TODO: Fix tooltip
+        self.monitor_toggle_button.setToolTip("Pause monitoring")
+        self._refresh_monitor_toggle_icon()
+
+    def _pause_monitoring(self) -> None:
+        self._monitoring_enabled = False
+        self._stop_monitor_thread()
+
+        if self.ui_refresh_timer.isActive():
+            self.ui_refresh_timer.stop()
+
+        self.status_pill.setText("Paused")
+        self.status_pill.setProperty("status", "paused")
+        self._repolish(self.status_pill)
+
+        # TODO: Fix tooltip
+        self.monitor_toggle_button.setToolTip("Resume Monitoring")
+        self._refresh_monitor_toggle_icon()
+
+    def _start_monitor_thread(self) -> None:
+        if self.monitor_thread is not None:
+            return
+
+        if self._settings is None:
+            return
+
+        self.monitor_thread = MonitorThread(
+            server=self._settings.host,
+            port=self._settings.port,
+            interval_seconds=self._settings.interval_seconds,
+            timeout_seconds=self._settings.timeout_seconds,
+        )
+        self.monitor_thread.result.connect(self.on_check_result)
+        self.monitor_thread.start()
+
     def _stop_monitor_thread(self, *, blocking: bool = False) -> None:
         thread = getattr(self, "monitor_thread", None)
         if not thread:
@@ -407,6 +477,29 @@ class MonitorView(QWidget):
 
         self.monitor_thread = None
 
+    def _current_theme(self) -> str:
+        target_theme = self.theme_button.property("target_theme")
+        if target_theme not in ("light", "dark"):
+            return "dark"
+
+        return "dark" if target_theme == "light" else "light"
+
+    def _refresh_monitor_toggle_icon(self) -> None:
+        current_theme = self._current_theme()
+        monitor_running = self.monitor_toggle_button.isChecked()
+
+        if current_theme == "light":
+            icon = self._dark_pause_icon if monitor_running else self._dark_play_icon
+        else:
+            icon = self._light_pause_icon if monitor_running else self._light_play_icon
+
+        self.monitor_toggle_button.setIcon(icon)
+
+        # TODO: Fix tooltip
+        self.monitor_toggle_button.setToolTip(
+            "Pause monitoring" if monitor_running else "Resume monitoring"
+        )
+
     def set_theme_toggle_target(self, target_theme: str) -> None:
         # target_theme is the theme that will be activated when clicked
         if target_theme == "light":
@@ -416,7 +509,9 @@ class MonitorView(QWidget):
 
         apply_tooltip((self.theme_button,), THEME_TOOLTIPS.get(target_theme, ""))
         self.theme_button.setProperty("target_theme", target_theme)
+        self.monitor_toggle_button.setProperty("target_theme", target_theme)
         self._repolish(self.theme_button)
+        self._refresh_monitor_toggle_icon()
 
     def shutdown(self) -> None:
         if getattr(self, "ui_refresh_timer", None):

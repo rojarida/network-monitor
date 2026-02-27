@@ -44,10 +44,11 @@ QWidget#monitor_view QLabel#status_label {
   color: #AAAAAA;
 }
 
-QLabel#status_label[status="online"]      { background-color: #1C4700; }
-QLabel#status_label[status="offline"]     { background-color: #590000; }
-QLabel#status_label[status="unreachable"] { background-color: #836300; }
-QLabel#status_label[status="unknown"]     { background-color: #707570; }
+QLabel#status_label[status="online"]        { background-color: #1C4700; }
+QLabel#status_label[status="offline"]       { background-color: #590000; }
+QLabel#status_label[status="unreachable"]   { background-color: #836300; }
+QLabel#status_label[status="unknown"]       { background-color: #707570; }
+QLabel#status_label[status="paused"]        { background-color: #454545; } 
 
 /* Metrics */
 QWidget#monitor_view QLabel#metric_value[kind="pill"] {
@@ -114,16 +115,19 @@ QPushButton#settings_button:pressed {
   border-color: #353535;
 }
 
+QToolButton#monitor_toggle_button,
 QToolButton#theme_button {
   background-color: #202020;
   border-color: #252525;
 }
 
+QToolButton#monitor_toggle_button:hover,
 QToolButton#theme_button:hover {
   background-color: #292929;
   border-color: #353535;
 }
 
+QToolButton#monitor_toggle_button:pressed,
 QToolButton#theme_button:pressed {
   background-color: #474747;
   border-color: #353535;
