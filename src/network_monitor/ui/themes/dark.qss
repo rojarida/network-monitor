@@ -44,10 +44,15 @@ QWidget#monitor_view QLabel#status_label {
   color: #AAAAAA;
 }
 
-QLabel#status_label[status="online"]      { background-color: #1C4700; }
-QLabel#status_label[status="offline"]     { background-color: #590000; }
-QLabel#status_label[status="unreachable"] { background-color: #836300; }
-QLabel#status_label[status="unknown"]     { background-color: #707570; }
+QLabel#status_label[status="online"]        { background-color: #1C4700; }
+QLabel#status_label[status="offline"]       { background-color: #590000; }
+QLabel#status_label[status="unreachable"]   { background-color: #836300; }
+QLabel#status_label[status="unknown"]       { background-color: #707570; }
+
+QWidget#monitor_view[paused="true"] QLabel#status_label[paused="true"] {
+  background-color: #454545;
+  color: #AAAAAA;
+}
 
 /* Metrics */
 QWidget#monitor_view QLabel#metric_value[kind="pill"] {
@@ -96,6 +101,31 @@ QWidget#monitor_view QLabel#metric_value[kind="pill"][metric="latency"][level="b
   color: #AAAAAA;
 }
 
+
+/* ------------------- When application is paused ---------------*/
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"] {
+  background-color: #454545;
+  color: #AAAAAA;
+}
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][metric="uptime"],
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][metric="downtime"] {
+  background-color: #454545;
+  color: #AAAAAA;
+}
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][metric="server"] {
+  background-color: #454545;
+  color: #AAAAAA;
+}
+
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][level="warn"],
+QWidget#monitor_view[paused="true"] QLabel#metric_value[kind="pill"][level="bad"] {
+  background-color: #454545;
+  color: #AAAAAA;
+}
+
 /* ----- SETTINGS BAR BUTTONS ----- */
 
 QPushButton#settings_button {
@@ -114,16 +144,19 @@ QPushButton#settings_button:pressed {
   border-color: #353535;
 }
 
+QToolButton#monitor_toggle_button,
 QToolButton#theme_button {
   background-color: #202020;
   border-color: #252525;
 }
 
+QToolButton#monitor_toggle_button:hover,
 QToolButton#theme_button:hover {
   background-color: #292929;
   border-color: #353535;
 }
 
+QToolButton#monitor_toggle_button:pressed,
 QToolButton#theme_button:pressed {
   background-color: #474747;
   border-color: #353535;

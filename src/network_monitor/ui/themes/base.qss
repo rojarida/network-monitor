@@ -68,7 +68,7 @@ QFrame#settings_bar {
   border: none;
 }
 
-/* ----- SETTINGS/THEME BUTTON ----- */
+/* ----- SETTINGS SECTION ----- */
 
 QPushButton#settings_button {
   min-width: 100px;
@@ -83,6 +83,7 @@ QPushButton#settings_button {
   border-style: solid;
 }
 
+QToolButton#monitor_toggle_button,
 QToolButton#theme_button {
   border: none;
   background: transparent;
@@ -94,6 +95,8 @@ QToolButton#theme_button {
   border-radius: 17px;
 }
 
+QToolButton#monitor_toggle_button:pressed,
+QToolButton#monitor_toggle_button:hover,
 QToolButton#theme_button:pressed,
 QToolButton#theme_button:hover {
   background: transparent;
