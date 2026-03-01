@@ -109,3 +109,8 @@ python -m network_monitor
 - [x] Disconnects aren't being incremented/tracked (fixed in [v0.3.2](CHANGELOG.md#v032))
 - [x] When changing interval checks and timeout checks, the current phase resets (fixed in [v0.4.0](CHANGELOG.md#v040))
 - [x] When pausing the monitoring, the timer continues counting in the background (fixed in [v0.8.2](CHANGELOG.md#v083))
+
+## Assets
+- Vectors and icons by <a href="https://www.svgrepo.com" target="_blank">SVG Repo</a>
+
+- Application icon was created by me using Canva.
