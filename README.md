@@ -3,27 +3,8 @@
 Desktop Python application (PySide6) that monitors **reachability of a target** via TCP and tracks network metrics.
 When the target can't be reached, it uses a **fallback probe** to distinguish "no internet connectivity" from "target not reachable".
 
-## Screenshots (Dark Theme)
-
-<h3 align="center">Online</h3>
-<p align="center">
-    <img src="assets/screenshots/online.png" alt="Online">
-</p>
-
-<h3 align="center">Unreachable</h3>
-<p align="center">
-    <img src="assets/screenshots/unreachable.png" alt="Unreachable">
-</p>
-
-<h3 align="center">Offline</h3>
-<p align="center">
-    <img src="assets/screenshots/offline.png" alt="Offline">
-</p>
-
-<h3 align="center">Settings</h3>
-<p align="center">
-    <img src="assets/screenshots/settings.png" alt ="Settings">
-</p>
+## Demo
+https://github.com/user-attachments/assets/4294c08a-38c0-484b-993d-82efdec2127e
 
 # How It Works
 
