@@ -26,7 +26,21 @@ from network_monitor.ui.help import (
 )
 
 
-STATUS_ICON_BUTTON_SIZE = 36
+_STATUS_UI = {
+    None: ("...", "unknown", "-"),
+    "online": ("Online", "online", "Online for"),
+    "offline": ("Offline", "offline", "Offline for"),
+    "unreachable": ("Unreachable", "unreachable", "Unreachable for"),
+}
+
+metrics = [
+    ("Server", "server_value", "server"),
+    ("Current phase", "phase_value", "phase"),
+    ("Latency", "latency_value", "latency"),
+    ("Disconnects", "disconnects_value", "disconnects"),
+    ("Total uptime", "total_downtime_value", "uptime"),
+    ("Total downtime", "total_downtime_value", "downtime"),
+]
 
 
 def format_seconds_as_hhmmss(seconds: float) -> str:
@@ -49,7 +63,6 @@ class ElidedLabel(QLabel):
         elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideMiddle,
     ) -> None:
         super().__init__(parent)
-        self._full_text = ""
         self._elide_mode = elide_mode
         self.setWordWrap(False)
 
@@ -81,6 +94,10 @@ class MonitorView(QWidget):
         super().__init__(parent)
         self._stopping_threads: list[MonitorThread] = []
         self._settings: SettingsData | None = None
+        self._pill_labels: list[QLabel] = []
+        self._metric_value_labels: list[QLabel] = []
+        self._monitoring_enabled = True
+
         self._sun_icon          = QIcon(":/icons/sun.svg")
         self._moon_icon         = QIcon(":/icons/moon.svg")
         self._dark_play_icon    = QIcon(":/icons/dark-play.svg")
@@ -156,13 +173,7 @@ class MonitorView(QWidget):
         settings_bar_layout.setSpacing(0)
 
         # Theme button
-        self.theme_button = QToolButton()
-        self.theme_button.setObjectName("theme_button")
-        self.theme_button.setAutoRaise(False)
-        self.theme_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.theme_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        self.theme_button.setIconSize(QSize(25, 25))
-        self.theme_button.setFixedSize(35, 35)
+        self.theme_button = self._make_icon_button(object_name="theme_button", size=35)
         self.theme_button.clicked.connect(self.theme_toggle_requested.emit)
 
         self.settings_button = QPushButton("Settings")
@@ -170,16 +181,8 @@ class MonitorView(QWidget):
         self.settings_button.setProperty("kind", "pill")
         self.settings_button.clicked.connect(self.settings_requested.emit)
 
-        self.monitor_toggle_button = QToolButton()
-        self.monitor_toggle_button.setObjectName("monitor_toggle_button")
-        self.monitor_toggle_button.setAutoRaise(False)
-        self.monitor_toggle_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.monitor_toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        self.monitor_toggle_button.setIconSize(QSize(25, 25))
-        self.monitor_toggle_button.setFixedSize(STATUS_ICON_BUTTON_SIZE, STATUS_ICON_BUTTON_SIZE)
-
-        self.monitor_toggle_button.setCheckable(True)
-        self.monitor_toggle_button.setChecked(True)
+        self.monitor_toggle_button = self._make_icon_button(
+            object_name="monitor_toggle_button", size=35, checkable=True)
         self.monitor_toggle_button.toggled.connect(self._on_monitor_toggled)
 
         settings_bar_layout.addStretch(1)
@@ -203,138 +206,106 @@ class MonitorView(QWidget):
         self.ui_refresh_timer.start()
 
     def apply_settings(self, settings: SettingsData) -> None:
-        """Apply settings and restart monitor thread"""
         self._settings = settings
-        self._stop_monitor_thread(blocking=False)
-
-        # Update state endpoint
         self.monitor_state.set_endpoint(settings.host, settings.port)
+        self._update_server()
 
-        # Update UI from settings
-        self.server_value.setText(settings.display_target)
-        self.server_value.setToolTip(settings.full_target)
+        # Restart status UI
+        self._set_text_if_changed(self.status_label, "...")
+        self._set_property_if_changed(self.status_label, "status", "unknown")
 
-        if self.property("paused") or not getattr(self, "_monitoring_enabled", True):
-            self.monitor_thread = None
+        if self._should_monitor_run():
+            self._restart_monitor_thread()
+            self._set_paused_mode(False)
+        else:
+            self._stop_monitor_thread(blocking=False)
             self._set_paused_mode(True)
-            return
-
-        # Restart thread with new configuration
-        self.monitor_thread = MonitorThread(
-            server=settings.host,
-            port=settings.port,
-            interval_seconds=settings.interval_seconds,
-            timeout_seconds=settings.timeout_seconds,
-        )
-
-        self.monitor_thread.result.connect(self.on_check_result)
-        self.monitor_thread.start()
         
-        self.status_label.setText("...")
-        self.status_label.setProperty("status", "unknown")
-        self._repolish(self.status_label)
         self.refresh_labels()
+
+    def _set_text_if_changed(self, label: QLabel, text: str) -> None:
+        if label.text() != text:
+            label.setText(text)
+
+    def _set_tooltip_if_changed(self, widget: QWidget, tooltip: str) -> None:
+        if widget.toolTip() != tooltip:
+            widget.setToolTip(tooltip)
+
+    def _set_property_if_changed(
+        self,
+        widget: QWidget,
+        name: str,
+        value: object,
+        *,
+        repolish: bool = True,
+    ) -> bool:
+        if widget.property(name) != value:
+            widget.setProperty(name, value)
+            if repolish:
+                self._repolish(widget)
+            return True
+        return False
 
     def refresh_labels(self) -> None:
         if self.property("paused") is True:
             return
 
+        self._update_status_and_phase()
+        self._update_server()
+        self._update_latency()
+        self._update_disconnects()
+        self._update_durations()
+
+    def _update_status_and_phase(self) -> None:
         last_status = self.monitor_state.last_status
+        text, new_status, phase_text = _STATUS_UI.get(last_status, _STATUS_UI["unreachable"])
 
-        if last_status is None:
-            self.status_label.setText("...")
-            new_status = "unknown"
-        elif last_status == "online":
-            self.status_label.setText("Online")
-            new_status = "online"
-        elif last_status == "offline":
-            self.status_label.setText("Offline")
-            new_status = "offline"
-        else:
-            # Unreachable
-            self.status_label.setText("Unreachable")
-            new_status = "unreachable"
+        self._set_text_if_changed(self.status_label, text)
+        self._set_tooltip_if_changed(self.status_label, status_value_tooltip(last_status))
 
-        self.status_label.setToolTip(status_value_tooltip(last_status))
-
-        # Root status 
-        if self.property("status") != new_status:
-            self.setProperty("status", new_status)
-            for label in self.findChildren(QLabel, "metric_value"):
+        if self._set_property_if_changed(self, "status", new_status, repolish=False):
+            for label in self._metric_value_labels:
                 self._repolish(label)
 
-        # Status selectors
-        if self.status_label.property("status") != new_status:
-            self.status_label.setProperty("status", new_status)
-            self._repolish(self.status_label)
+        self._set_property_if_changed(self.status_label, "status", new_status, repolish=True)
+        self._set_text_if_changed(self.phase_label, phase_text)
 
-        # Phase label
-        if new_status == "online":
-            phase_text = "Online for"
-        elif new_status == "offline":
-            phase_text = "Offline for"
-        elif new_status == "unreachable":
-            phase_text = "Unreachable for"
-        else:
-            phase_text = "-"
-
-        if self.phase_label.text() != phase_text:
-            self.phase_label.setText(phase_text)
-
-        # Server
-        if self._settings is not None:
-            if self.server_value.text() != self._settings.display_target:
-                self.server_value.setText(self._settings.display_target)
-
-            desired_tooltip = self._settings.full_target
-            if self.server_value.toolTip() != desired_tooltip:
-                self.server_value.setToolTip(desired_tooltip)
-
-        # Latency
+    def _update_latency(self) -> None:
         latency_ms = self.monitor_state.last_latency_ms
-
         if latency_ms is None:
-            self.latency_value.setText("-")
-            latency_level = "na"
+            self._set_text_if_changed(self.latency_value, "-")
+            level = "na"
         else:
-            rounded_latency_ms = round(latency_ms)
-            self.latency_value.setText(f"{rounded_latency_ms} ms")
+            rounded = round(latency_ms)
+            self._set_text_if_changed(self.latency_value, f"{rounded} ms")
+            level = "good" if rounded < 100 else (
+                "warn" if rounded < 200 else "bad"
+            )
 
-            if rounded_latency_ms < 100:
-                latency_level = "good"
-            elif rounded_latency_ms < 200:
-                latency_level = "warn"
-            else:
-                latency_level = "bad"
+        self._set_property_if_changed(self.latency_value, "level", level, repolish=True)
 
-        if self.latency_value.property("level") != latency_level:
-            self.latency_value.setProperty("level", latency_level)
-            self._repolish(self.latency_value)
-
-        # Disconnects
-        self.disconnects_value.setText(str(self.monitor_state.disconnects))
+    def _update_disconnects(self) -> None:
         disconnects = self.monitor_state.disconnects
+        self._set_text_if_changed(self.disconnects_value, str(disconnects))
+        level = "good" if disconnects == 0 else (
+            "warn" if disconnects < 10 else "bad"
+        )
+        self._set_property_if_changed(self.disconnects_value, "level", level, repolish=True)
 
-        # Track disconnect count and create a property level
-        if disconnects == 0:
-            disconnects_level = "good"
-        elif disconnects < 10:
-            disconnects_level = "warn"
-        else:
-            disconnects_level = "bad"
+    def _update_durations(self) -> None:
+        total_uptime, total_downtime = self.monitor_state.totals_including_current_phase()
+        self._set_text_if_changed(self.total_uptime_value, format_seconds_as_hhmmss(total_uptime))
+        self._set_text_if_changed(self.total_downtime_value, format_seconds_as_hhmmss(total_downtime))
 
-        if self.disconnects_value.property("level") != disconnects_level:
-            self.disconnects_value.setProperty("level", disconnects_level)
-            self._repolish(self.disconnects_value)
+        current_phase = self.monitor_state.current_phase_seconds()
+        self._set_text_if_changed(self.phase_value, format_seconds_as_hhmmss(current_phase))
 
-        # Total uptime/downtime
-        total_uptime_seconds, total_downtime_seconds = self.monitor_state.totals_including_current_phase()
-        self.total_uptime_value.setText(format_seconds_as_hhmmss(total_uptime_seconds))
-        self.total_downtime_value.setText(format_seconds_as_hhmmss(total_downtime_seconds))
+    def _update_server(self) -> None:
+        if self._settings is None:
+            return
+        self._set_text_if_changed(self.server_value, self._settings.display_target)
+        self._set_tooltip_if_changed(self.server_value, self._settings.full_target)
 
-        # Phase
-        current_phase_seconds = self.monitor_state.current_phase_seconds()
-        self.phase_value.setText(format_seconds_as_hhmmss(current_phase_seconds))
 
     def _set_paused_mode(self, paused: bool) -> None:
         """Overwrites the current labels used by `refresh_labels()`"""
@@ -394,6 +365,9 @@ class MonitorView(QWidget):
         value_label = ElidedLabel() if key_text == "Server" else QLabel("-")
         value_label.setObjectName(value_object_name)
         value_label.setProperty("kind", "pill")
+        self._pill_labels.append(value_label)
+        if value_label.objectName() == "metric_value":
+            self._metric_value_labels.append(value_label)
 
         if key_text == "Server":
             value_label.setProperty("metric", "server")
@@ -413,6 +387,25 @@ class MonitorView(QWidget):
         apply_tooltip((key_label,), tooltip_text)
 
         return row, key_label, value_label
+
+    def _make_icon_button(
+        self,
+        object_name: str,
+        *,
+        size: QSize,
+        icon_size: QSize = QSize(25, 25),
+        checkable: bool = False,
+    ) -> QToolButton:
+        button = QToolButton()
+        button.setObjectName(object_name)
+        button.setAutoRaise(False)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        button.setIconSize(icon_size)
+        button.setFixedSize(size, size)
+        button.setCheckable(checkable)
+        
+        return button
 
     def _repolish(self, widget: QWidget) -> None:
         widget.style().unpolish(widget)
@@ -454,6 +447,17 @@ class MonitorView(QWidget):
 
         self._set_paused_mode(True)
         self._refresh_monitor_toggle_icon()
+
+    def _should_monitor_run(self) -> bool:
+        return (
+            bool(self._settings) 
+            and self._monitoring_enabled 
+            and not self.property("paused")
+        )
+
+    def _restart_monitor_thread(self) -> None:
+        self._stop_monitor_thread(blocking=False)
+        self._start_monitor_thread()
 
     def _start_monitor_thread(self) -> None:
         if self.monitor_thread is not None:
