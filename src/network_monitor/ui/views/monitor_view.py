@@ -33,15 +33,6 @@ _STATUS_UI = {
     "unreachable": ("Unreachable", "unreachable", "Unreachable for"),
 }
 
-metrics = [
-    ("Server", "server_value", "server"),
-    ("Current phase", "phase_value", "phase"),
-    ("Latency", "latency_value", "latency"),
-    ("Disconnects", "disconnects_value", "disconnects"),
-    ("Total uptime", "total_downtime_value", "uptime"),
-    ("Total downtime", "total_downtime_value", "downtime"),
-]
-
 
 def format_seconds_as_hhmmss(seconds: float) -> str:
     seconds = int(seconds)
@@ -90,14 +81,32 @@ class MonitorView(QWidget):
     theme_toggle_requested = Signal()
     monitor_toggle_requested = Signal()
 
+    # Widgets
+    status_pill: QLabel
+    status_label: QLabel
+    phase_label: QLabel
+
+    server_value: ElidedLabel
+    phase_value: QLabel
+    latency_value: QLabel
+    disconnects_value: QLabel
+    total_uptime_value: QLabel
+    total_downtime_value: QLabel
+
+    theme_button: QToolButton
+    settings_button: QPushButton
+    monitor_toggle_button: QToolButton
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+
         self._stopping_threads: list[MonitorThread] = []
         self._settings: SettingsData | None = None
         self._pill_labels: list[QLabel] = []
         self._metric_value_labels: list[QLabel] = []
         self._monitoring_enabled = True
 
+        # Icons
         self._sun_icon          = QIcon(":/icons/sun.svg")
         self._moon_icon         = QIcon(":/icons/moon.svg")
         self._dark_play_icon    = QIcon(":/icons/dark-play.svg")
@@ -105,75 +114,110 @@ class MonitorView(QWidget):
         self._dark_pause_icon   = QIcon(":/icons/dark-pause.svg")
         self._light_pause_icon  = QIcon(":/icons/light-pause.svg")
 
+        # Widget configuration
         self.setObjectName("monitor_view")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
+        # Domain state
         self.monitor_state = MonitorState(server="google.com", port=443)
         self.monitor_state.start()
 
+        # UI
+        self._build_ui()
+
+        # Thread and timers
+        self.monitor_thread: MonitorThread | None = None
+
+        self.ui_refresh_timer = QTimer(self)
+        self.ui_refresh_timer.setInterval(250)
+        self.ui_refresh_timer.timeout.connect(self.refresh_labels)
+        self.ui_refresh_timer.start()
+
+    def _build_ui(self) -> None:
         root_layout = QVBoxLayout(self)
         root_layout.setObjectName("root_layout")
         root_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Statistic container
         stats_container = QWidget()
         stats_container.setObjectName("stats_container")
+
         stats_layout = QVBoxLayout(stats_container)
         stats_layout.setContentsMargins(8, 6, 8, 6)
 
-        # Labels and metrics
-        status_row, self._status_key, self.status_pill = self._make_metric_row(
+        # Metrics
+        metric_widgets = self._build_metrics()
+        self._add_stats_items(
+            stats_layout,
+            *metric_widgets,
+            "separator_bottom",
+        )
+
+        # Settings bar
+        settings_bar = self._build_settings_bar()
+        stats_layout.addStretch(1)
+        stats_layout.addWidget(settings_bar)
+        stats_layout.addStretch(1)
+
+        root_layout.addWidget(stats_container)
+
+    def _build_metrics(self) -> list[QWidget | str]:
+        # Status
+        status_row, _status_key, status_value = self._make_metric_row(
             "Status",
             center_value=True,
-            value_object_name="status_label")
-        self.status_label = self.status_pill
+            value_object_name="status_label",
+        )
+        self.status_pill = status_value
+        self.status_label = status_value
         self.status_label.setText("...")
         self.status_label.setProperty("status", "unknown")
 
-        server_row, _server_label, self.server_value = self._make_metric_row("Server")
-        self.server_value.setProperty("metric", "server")
+        # Remaining metrics
+        metric_specs: list[tuple[str, str, str, type[QLabel] | None]] = [
+            ("Server", "server_value", "server", ElidedLabel),
+            ("Current phase", "phase_value", "phase", None),
+            ("Latency", "latency_value", "latency", None),
+            ("Disconnects", "disconnects_value", "disconnects", None),
+            ("Total uptime", "total_uptime_value", "uptime", None),
+            ("Total downtime", "total_downtime_value", "downtime", None),
+        ]
 
-        phase_row, self.phase_label, self.phase_value = self._make_metric_row("Current phase")
-        self.phase_value.setProperty("metric", "phase")
+        rows: dict[str, QWidget] = {}
+        for key_text, attr_name, metric_key, value_factory in metric_specs:
+            row, key_label, value_label = self._make_metric_row(
+                key_text,
+                metric_key=metric_key,
+                value_factory=value_factory,
+            )
+            setattr(self, attr_name, value_label)
+            rows[attr_name] = row
 
-        latency_row, _latency_label, self.latency_value = self._make_metric_row("Latency")
-        self.latency_value.setProperty("metric", "latency")
+            if metric_key == "phase":
+                self.phase_label = key_label
 
-        disconnects_row, _disconnects_label, self.disconnects_value = self._make_metric_row("Disconnects")
-        self.disconnects_value.setProperty("metric", "disconnects")
+        return [
+            status_row,
+            "separator_top",
+            rows["server_value"],
+            "separator_top",
+            rows["phase_value"],
+            rows["latency_value"],
+            rows["disconnects_value"],
+            "separator_middle",
+            rows["total_uptime_value"],
+            rows["total_downtime_value"],
+        ]
 
-        uptime_row, _uptime_label, self.total_uptime_value = self._make_metric_row("Total uptime")
-        self.total_uptime_value.setProperty("metric", "uptime")
-
-        downtime_row, _downtime_label, self.total_downtime_value = self._make_metric_row("Total downtime")
-        self.total_downtime_value.setProperty("metric", "downtime")
-
-        stats_layout.addWidget(status_row)
-        stats_layout.addWidget(self._make_separator("separator_top"))
-        stats_layout.addWidget(server_row)
-        stats_layout.addWidget(self._make_separator("separator_top"))
-
-        stats_layout.addWidget(phase_row)
-        stats_layout.addWidget(latency_row)
-        stats_layout.addWidget(disconnects_row)
-        stats_layout.addWidget(self._make_separator("separator_middle"))
-        stats_layout.addWidget(uptime_row)
-        stats_layout.addWidget(downtime_row)
-
-        # Separator between downtime and settings button
-        stats_layout.addWidget(self._make_separator("separator_bottom"))
-
-        # Settings bar
+    def _build_settings_bar(self) -> QFrame:
         settings_bar = QFrame()
         settings_bar.setObjectName("settings_bar")
         settings_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        settings_bar_layout = QHBoxLayout(settings_bar)
-        settings_bar_layout.setContentsMargins(0, 0, 0, 0)
-        settings_bar_layout.setSpacing(0)
+        layout = QHBoxLayout(settings_bar)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
 
-        # Theme button
-        self.theme_button = self._make_icon_button(object_name="theme_button", size=35)
+        self.theme_button = self._make_icon_button("theme_button", size=35)
         self.theme_button.clicked.connect(self.theme_toggle_requested.emit)
 
         self.settings_button = QPushButton("Settings")
@@ -182,28 +226,32 @@ class MonitorView(QWidget):
         self.settings_button.clicked.connect(self.settings_requested.emit)
 
         self.monitor_toggle_button = self._make_icon_button(
-            object_name="monitor_toggle_button", size=35, checkable=True)
+            "monitor_toggle_button",
+            size=35,
+            checkable=True
+        )
         self.monitor_toggle_button.toggled.connect(self._on_monitor_toggled)
 
-        settings_bar_layout.addStretch(1)
-        settings_bar_layout.addWidget(self.theme_button, alignment=Qt.AlignmentFlag.AlignVCenter)
-        settings_bar_layout.setSpacing(5)
-        settings_bar_layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignVCenter)
-        settings_bar_layout.addWidget(self.monitor_toggle_button, alignment=Qt.AlignmentFlag.AlignVCenter)
-        settings_bar_layout.addStretch(1)
+        # Make "running" the default
+        self.monitor_toggle_button.blockSignals(True)
+        self.monitor_toggle_button.setChecked(True)
+        self.monitor_toggle_button.blockSignals(False)
+        self._refresh_monitor_toggle_icon()
 
-        stats_layout.addStretch(1)
-        stats_layout.addWidget(settings_bar)
-        stats_layout.addStretch(1)
-        root_layout.addWidget(stats_container)
+        layout.addStretch(1)
+        layout.addWidget(self.theme_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(self.monitor_toggle_button, alignment=Qt.AlignmentFlag.AlignVCenter)
+        layout.addStretch(1)
 
-        # Monitor thread and UI refresh
-        self.monitor_thread: MonitorThread | None = None
+        return settings_bar
 
-        self.ui_refresh_timer = QTimer(self)
-        self.ui_refresh_timer.setInterval(250)
-        self.ui_refresh_timer.timeout.connect(self.refresh_labels)
-        self.ui_refresh_timer.start()
+    def _add_stats_items(self, layout: QVBoxLayout, *items: QWidget | str) -> None:
+        for item in items:
+            if isinstance(item, str):
+                layout.addWidget(self._make_separator(item))
+            else:
+                layout.addWidget(item)
 
     def apply_settings(self, settings: SettingsData) -> None:
         self._settings = settings
@@ -313,13 +361,12 @@ class MonitorView(QWidget):
             self.setProperty("paused", paused)
             self._repolish(self)
 
-        pill_labels = [widget for widget in self.findChildren(QLabel) if widget.property("kind") == "pill"]
+        pill_labels = self._pill_labels
+        self.status_pill.setProperty("paused", paused)
 
         if paused:
             self.status_pill.setText("Paused")
-            self.status_pill.setProperty("paused", paused)
             self.status_pill.setToolTip("Monitoring paused")
-
             self.phase_label.setText("Paused")
             
             for widget in pill_labels:
@@ -349,8 +396,11 @@ class MonitorView(QWidget):
         self,
         key_text: str,
         *,
+        metric_key: str | None = None,
+        value_factory: type[QLabel] | None = None,
         center_value: bool = False,
-        value_object_name: str = "metric_value") -> tuple[QWidget, QLabel, QLabel]:
+        value_object_name: str = "metric_value"
+    ) -> tuple[QWidget, QLabel, QLabel]:
         row = QWidget()
         row.setObjectName("metric_row")
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -362,16 +412,23 @@ class MonitorView(QWidget):
         key_label = QLabel(key_text)
         key_label.setObjectName("metric_key")
 
-        value_label = ElidedLabel() if key_text == "Server" else QLabel("-")
+        value_label: QLabel = (value_factory() if value_factory else QLabel("-"))
+        if not value_label.text():
+            value_label.setText("-")
+
         value_label.setObjectName(value_object_name)
         value_label.setProperty("kind", "pill")
+
         self._pill_labels.append(value_label)
-        if value_label.objectName() == "metric_value":
+        if value_object_name == "metric_value":
             self._metric_value_labels.append(value_label)
 
-        if key_text == "Server":
-            value_label.setProperty("metric", "server")
-            value_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        if metric_key is not None and value_object_name == "metric_value":
+            value_label.setProperty("metric", metric_key)
+            if metric_key == "server":
+                value_label.setSizePolicy(
+                    QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
+                )
 
         if center_value:
             key_label.hide()
@@ -392,7 +449,7 @@ class MonitorView(QWidget):
         self,
         object_name: str,
         *,
-        size: QSize,
+        size: int,
         icon_size: QSize = QSize(25, 25),
         checkable: bool = False,
     ) -> QToolButton:
