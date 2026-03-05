@@ -125,9 +125,10 @@ class MonitorView(QWidget):
         # UI
         self._build_ui()
 
-        # Thread and timers
+        # Thread
         self.monitor_thread: MonitorThread | None = None
 
+        # Timers
         self.ui_refresh_timer = QTimer(self)
         self.ui_refresh_timer.setInterval(250)
         self.ui_refresh_timer.timeout.connect(self.refresh_labels)
@@ -232,10 +233,7 @@ class MonitorView(QWidget):
         )
         self.monitor_toggle_button.toggled.connect(self._on_monitor_toggled)
 
-        # Make "running" the default
-        self.monitor_toggle_button.blockSignals(True)
-        self.monitor_toggle_button.setChecked(True)
-        self.monitor_toggle_button.blockSignals(False)
+        self._sync_monitor_toggle_checked()
         self._refresh_monitor_toggle_icon()
 
         layout.addStretch(1)
@@ -258,18 +256,18 @@ class MonitorView(QWidget):
         self.monitor_state.set_endpoint(settings.host, settings.port)
         self._update_server()
 
-        # Restart status UI
-        self._set_text_if_changed(self.status_label, "...")
-        self._set_property_if_changed(self.status_label, "status", "unknown")
-
         if self._should_monitor_run():
+            # Restart status UI
+            self._set_text_if_changed(self.status_label, "...")
+            self._set_property_if_changed(self.status_label, "status", "unknown")
             self._restart_monitor_thread()
             self._set_paused_mode(False)
-        else:
-            self._stop_monitor_thread(blocking=False)
-            self._set_paused_mode(True)
+            self.refresh_labels()
+            return
         
-        self.refresh_labels()
+        self._stop_monitor_thread(blocking=False)
+        self._set_paused_mode(True)
+        self._update_server()
 
     def _set_text_if_changed(self, label: QLabel, text: str) -> None:
         if label.text() != text:
@@ -295,7 +293,7 @@ class MonitorView(QWidget):
         return False
 
     def refresh_labels(self) -> None:
-        if self.property("paused") is True:
+        if self.property("paused"):
             return
 
         self._update_status_and_phase()
@@ -354,31 +352,40 @@ class MonitorView(QWidget):
         self._set_text_if_changed(self.server_value, self._settings.display_target)
         self._set_tooltip_if_changed(self.server_value, self._settings.full_target)
 
-
     def _set_paused_mode(self, paused: bool) -> None:
         """Overwrites the current labels used by `refresh_labels()`"""
-        if self.property("paused") != paused:
-            self.setProperty("paused", paused)
-            self._repolish(self)
+        if self.property("paused") == paused:
+            self._sync_monitor_toggle_checked()
+            self._refresh_monitor_toggle_icon()
+            return
 
-        pill_labels = self._pill_labels
-        self.status_pill.setProperty("paused", paused)
+        self.setProperty("paused", paused)
+        self._repolish(self)
+
+        for label in self._pill_labels:
+            label.setProperty("paused", paused)
 
         if paused:
             self.status_pill.setText("Paused")
             self.status_pill.setToolTip("Monitoring paused")
             self.phase_label.setText("Paused")
             
-            for widget in pill_labels:
-                if widget is self.status_pill or widget is self.server_value:
+            for label in self._pill_labels:
+                if label in (self.status_pill, self.server_value):
                     continue
-                widget.setText("-")
+                label.setText("-")
 
             self.latency_value.setProperty("level", "na")
             self.disconnects_value.setProperty("level", "na")
+        else:
+            self.latency_value.setProperty("level", "na")
+            self.disconnects_value.setProperty("level", "na")
 
-        for widget in pill_labels:
+        for widget in self._pill_labels:
             self._repolish(widget)
+
+        self._sync_monitor_toggle_checked()
+        self._refresh_monitor_toggle_icon()
 
     def _make_separator(self, name: str) -> QFrame:
         line = QFrame()
@@ -461,6 +468,7 @@ class MonitorView(QWidget):
         button.setIconSize(icon_size)
         button.setFixedSize(size, size)
         button.setCheckable(checkable)
+        button.setChecked(False)
         
         return button
 
@@ -477,8 +485,9 @@ class MonitorView(QWidget):
         self.monitor_state.apply(result_object)
         self.refresh_labels()
 
-    def _on_monitor_toggled(self, monitoring_enable: bool) -> None:
-        if monitoring_enable:
+    def _on_monitor_toggled(self, checked: bool = False) -> None:
+        # Checked=True: Monitoring is enabled (pause icon)
+        if checked:
             self._resume_monitoring()
         else:
             self._pause_monitoring()
@@ -493,6 +502,7 @@ class MonitorView(QWidget):
         self._set_paused_mode(False)
         self._start_monitor_thread()
         self._refresh_monitor_toggle_icon()
+        self.refresh_labels()
 
     def _pause_monitoring(self) -> None:
         self.monitor_state.pause()
@@ -576,19 +586,28 @@ class MonitorView(QWidget):
 
     def _refresh_monitor_toggle_icon(self) -> None:
         current_theme = self._current_theme()
-        monitor_running = self.monitor_toggle_button.isChecked()
+        paused = bool(self.property("paused"))
 
         if current_theme == "light":
-            icon = self._dark_pause_icon if monitor_running else self._dark_play_icon
+            icon = self._dark_pause_icon if not paused else self._dark_play_icon
         else:
-            icon = self._light_pause_icon if monitor_running else self._light_play_icon
+            icon = self._light_pause_icon if not paused else self._light_play_icon
 
         self.monitor_toggle_button.setIcon(icon)
 
         # TODO: Fix tooltip
         self.monitor_toggle_button.setToolTip(
-            "Pause monitoring" if monitor_running else "Resume monitoring"
+            "Pause monitoring" if not paused else "Resume monitoring"
         )
+
+    def _sync_monitor_toggle_checked(self) -> None:
+        should_be_checked = not bool(self.property("paused"))
+        if self.monitor_toggle_button.isChecked() == should_be_checked:
+            return
+
+        self.monitor_toggle_button.blockSignals(True)
+        self.monitor_toggle_button.setChecked(should_be_checked)
+        self.monitor_toggle_button.blockSignals(False)
 
     def set_theme_toggle_target(self, target_theme: str) -> None:
         # target_theme is the theme that will be activated when clicked

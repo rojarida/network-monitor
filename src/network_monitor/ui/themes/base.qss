@@ -38,8 +38,8 @@ QLabel#metric_value {
 }
 
 QLabel#metric_value[metric="server"] {
-    min-width: 140px;
-    max-width: 220px;
+  min-width: 140px;
+  max-width: 220px;
 }
 
 /* Base pill styling */
