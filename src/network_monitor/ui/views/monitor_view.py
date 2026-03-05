@@ -293,11 +293,11 @@ class MonitorView(QWidget):
         return False
 
     def refresh_labels(self) -> None:
+        self._update_server()
         if self.property("paused"):
             return
 
         self._update_status_and_phase()
-        self._update_server()
         self._update_latency()
         self._update_disconnects()
         self._update_durations()
