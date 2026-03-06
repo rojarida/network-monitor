@@ -17,7 +17,7 @@ def main() -> int:
     icon = QIcon.fromTheme("network-monitor")
 
     if not icon:
-        icon = QIcon(":/icons/network-monitor")
+        icon = QIcon(":/icons/network-monitor.png")
 
     application.setWindowIcon(icon)
     QCoreApplication.setOrganizationName("RomanJay")
