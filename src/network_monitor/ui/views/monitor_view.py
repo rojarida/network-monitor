@@ -34,17 +34,33 @@ _STATUS_UI = {
 }
 
 
-def format_seconds_as_hhmmss(seconds: float) -> str:
-    seconds = int(seconds)
-
+def format_duration(seconds: float) -> str:
     if seconds <= 0:
         return "-"
 
-    hours = seconds // 3600
-    minutes = (seconds % 3600) // 60
-    remaining_seconds = seconds % 60
+    total_seconds = int(seconds)
 
-    return f"{hours:02d}:{minutes:02d}:{remaining_seconds:02d}"
+    seconds_per_minute = 60
+    seconds_per_hour = 60 * seconds_per_minute
+    seconds_per_day = 24 * seconds_per_hour
+    seconds_per_year = 365 * seconds_per_day
+
+    years, remainder = divmod(total_seconds, seconds_per_year)
+    days, remainder = divmod(remainder, seconds_per_day)
+    hours, remainder = divmod(remainder, seconds_per_hour)
+    minutes, seconds_remaining = divmod(remainder, seconds_per_minute)
+
+    hhmmss = f"{hours:02d}:{minutes:02d}:{seconds_remaining:02d}"
+
+    if years > 0:
+        if days < 1:
+            return f"{years}y {hhmmss}"
+        return f"{years}y {days}d {hhmmss}"
+
+    if days > 0:
+        return f"{days}d {hhmmss}"
+    
+    return hhmmss
 
 
 class ElidedLabel(QLabel):
@@ -340,11 +356,11 @@ class MonitorView(QWidget):
 
     def _update_durations(self) -> None:
         total_uptime, total_downtime = self.monitor_state.totals_including_current_phase()
-        self._set_text_if_changed(self.total_uptime_value, format_seconds_as_hhmmss(total_uptime))
-        self._set_text_if_changed(self.total_downtime_value, format_seconds_as_hhmmss(total_downtime))
+        self._set_text_if_changed(self.total_uptime_value, format_duration(total_uptime))
+        self._set_text_if_changed(self.total_downtime_value, format_duration(total_downtime))
 
         current_phase = self.monitor_state.current_phase_seconds()
-        self._set_text_if_changed(self.phase_value, format_seconds_as_hhmmss(current_phase))
+        self._set_text_if_changed(self.phase_value, format_duration(current_phase))
 
     def _update_server(self) -> None:
         if self._settings is None:
