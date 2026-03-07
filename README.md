@@ -36,23 +36,6 @@ Latency is measured as the TCP connect time (when `Online`).
     - Severity styling for latency and disconnects
 - Status tooltip (hover) with detailed information
 
-## Tech Stack
-
-- Python 3.11+
-- PySide6 (Qt for Python)
-- Background worker thread for network checks
-- QSettings for persisted configuration
-- QSS for styling
-
-## Architecture Notes (v0.8.0)
-
-The monitoring implementation is layered for clarity and testability:
-
-- `services/monitor/probe.py`: Performs TCP connect attempts via `try_connect`
-- `services/monitor/engine.py`: Contains logic and returns a `CheckResult`
-- `ui/workers/monitor_thread.py`: Runs a `QThread` loop and emits results back to the UI
-- `core/monitor/state.py`: Tracks the state of the monitoring metrics
-
 ## Setup
 
 ### Option A: uv (Recommended)
@@ -68,6 +51,7 @@ uv run network-monitor
 
 ### Option B: venv & pip
 
+On Linux:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -75,8 +59,15 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -e .
 ```
 
-## Run
+On Windows (PowerShell):
+```bash
+python3 -m venv .venv
+.venv\Scripts\Activate.ps1
+python3 -m pip install --upgrade pip
+python3 -m pip install -e .
+```
 
+Run with:
 ```bash
 network-monitor
 ```
