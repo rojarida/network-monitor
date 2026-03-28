@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+### v0.8.4
+#### Fixed
+- Total timers will now rollerover to years/days
+  - 24:00:00 will now display 1d
+  - 365:00:00 will now display 1y
+
 ### v0.8.3
 #### Fixed
 - Pause now correctly stops counting in the background.
